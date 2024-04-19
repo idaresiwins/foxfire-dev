@@ -1,0 +1,33 @@
+{% extends "admin_index.html" %}
+{% block content %}
+<div>
+    <div class="footer">
+        <p>Users</p>
+    </div>
+    <a href="{{url_for('create_dummy')}}" class="btn btn-primary">Create Dummy Account</a>
+        <table class="table">
+            <thead>
+                <tr>
+                    <th scope="col">Name</th>
+                    <th scope="col">Address</th>
+                    <th scope="col">Email</th>
+                    <th scope="col">Phone</th>
+                    <th scope="col">ID#</th>
+                    <th scope="col">Place Order on behalf</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for user in all_users %}
+                <tr>
+                    <td><a href="{{ url_for('edit_account', user_id=user.id) }}">{{user.name}}</a></td>
+                    <td>{{user.address}}, {{user.city}}, {{user.state}}, {{user.zipcode}}</td>
+                    <td>{{user.email}}</td>
+                    <td>{{user.phone}}</td>
+                    <td>{{user.id}}</td>
+                    <td><a href="{{url_for('ordering', user_id=user.id)}}">Place Order for {{user.name}}</a></td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+</div>
+{% endblock %}

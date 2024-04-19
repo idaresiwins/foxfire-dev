@@ -1,0 +1,83 @@
+{% extends "index.html" %}
+{% block content %}
+<div class="footer">Ordering</div>
+<p>Please place your order by Wednesday 6PM.</p>
+{% if not item_matrix[0] %}
+    <p>Ordering is closed while we fulfill our backlog. Ordering will resume shortly.</p>
+{% else %}
+{% if current_user.email in admins and current_user.id != user.id%}
+<h3 style="color:red">Placing order on behalf of {{ user.name }}</h3>
+{% endif %}
+<form action="#" method="post">
+    <div class="grid-container">
+        {% for veggie in item_matrix %}
+        <div class="grid-item  mr-5 ml-5">
+            {% if veggie.veg_url %}<a href="{{veggie.veg_url}}" target="_blank">
+            {% else %}
+            {% endif %}
+            <p>{{veggie.veg_name}}</p>
+            {% if veggie.veg_image != 'nia.png' %}
+              <img src="/static/uploads/{{ veggie.veg_image }}">
+            {% else %}
+              <img src="{{url_for('static', filename='nia.png')}}">
+            {% endif %}</a>
+            <p>Quantity <input type="text" name="{{ veggie.veg_name }}" /></p>
+            <p>${{veggie.veg_price}}</p>
+        </div>
+        {% endfor %}
+    </div>
+    <div class="row" style="float: left;">
+        <p>Where would you prefer to fulfill your order?</p>
+        <div class="form-check">
+            <input class="form-check-input" type="radio" name="fulfill_location" id="home" value="home" checked>Deliver to my home address for $7 (subject to pre-approval.)</input>
+        </div>
+        <div class="form-check">
+            <input class="form-check-input" type="radio" name="fulfill_location" id="farm" value="farm" checked>Pickup at Foxfire Farm (20% discount!)</input>
+        </div>
+        <div class="form-check">
+            <input class="form-check-input" type="radio" name="fulfill_location" id="flexRadioDefault5" value="danville2">Pickup at the Danville Nutrition Center (Fridays only)</input>
+        </div>
+        <div class="form-check">
+            <input class="form-check-input" type="radio" name="fulfill_location" id="boyle" value="boyle">Pickup at the Boyle County Farmers Market</input>
+        </div>
+	    <p>Comments <input type="text" name="order_comment" /></p>
+        <p><input type="button" value="Submit Order" class="btn btn-primary btn-lg" data-bs-toggle="modal" data-bs-target="#exampleModal"/></p>
+
+        <!-- Modal -->
+
+        <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h1 class="modal-title fs-5" id="exampleModalLabel">Foxfire Farms</h1>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        Are you sure you are ready to place your order?
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Go Back</button>
+                        <button type="submit" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#exampleModal2">Submit</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+
+<!-- Modal -->
+<div class="modal fade" id="exampleModal2" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h1 class="modal-title fs-5" id="exampleModalLabel2">Foxfire Farms</h1>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        Please wait, Your order is being processed. You will be taken to the home page momentarily.
+      </div>
+    </div>
+  </div>
+</div>
+{% endif %}
+{% endblock %}

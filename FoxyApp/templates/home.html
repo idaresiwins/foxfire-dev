@@ -1,0 +1,125 @@
+{% extends "index.html" %}
+{% block content %}
+<div class="position-absolute top-0 start-50 translate-middle-x">
+    <img class="image-fluid" src="/static/photos/Banner.jpg" style="width:100%;">
+    <h2 class="mt-5">About Us</h2>
+    <img class="image-fluid" src="/static/photos/FoxfireFarm (11).jpg" style="width:100%;">
+
+    <p>    We are Aaron and Irina Lange, owners and managers of Foxfire Farm. Aaron grew up on
+    our farm and Irina worked on it through her teen years. Aaron went to college, Irina did volunteer
+    work and traveled for a couple years, and we both found ourselves back home after our
+    adventures. We fell in love, got married, and then little Jonathan joined the crew.</p>
+
+    <p>    Aaron’s parents grew organic vegetables on our farm for 30 years before we got married
+    and took over ownership and management. In that transition, we re-branded as “Foxfire Farm,”
+    but still hold to the same small business and organic farming values Aaron’s parents had. Our
+    mission is to grow quality, organic produce and make it available to our local community through
+    local stores, farmer’s markets, and our CSA.</p>
+
+
+
+
+
+
+    <h2 class="mt-5">Community Supported Agriculture</h2>
+    <img class="image-fluid" src="/static/photos/VeggieCountertop.jpg" style="width:100%;">
+    <p>    There is more to Community Supported Agriculture (CSA) than simply a weekly veggie box.
+    CSA is an alternative lifestyle for the consumer which supports an alternative business model for
+    the farmer.</p>
+    <p>    The CSA alternative is that the CSA farmers go directly to their local community for support
+    rather than wholesale buyers and financial lenders. The original CSA model was quite rigid: the
+    consumer buys a “share” in the farm prior to the season; the farmer uses this money to start up
+    the farm for the year; the farmer then provides (for a set number of weeks during the season) a
+    weekly box of the farm produce to the CSA member.</p>
+    <p>    Our CSA operates differently. Our CSA is open year round, so you have access to fresh veggies
+    all year. We encourage customers to prepay in lump sums, but also allow pay-as-you-go. Rather
+    than a set order each week, we operate by complete customer choice through the web-based
+    ordering system. In short, you can order what you want, and only pay for what you order. If you
+    are on vacation or don’t need to order one week, no problem! You only order the weeks you
+    want to. Below is our CSA pickup and delivery schedule. To receive your order for that week,
+    place it by Wednesday at 2pm.</p>
+    <p>Danville Nutrition Center, 11am 6pm Fridays</p>
+    <p>Boyle Co Farmer’s Market Saturdays 9am-12pm, only April through October</p>
+    <p>Farm Pickup, 9am-6pm Friday or Saturday (20% discount)</p>
+    <p>Home delivery in Liberty and Danville for an extra fee on Fridays</p>
+    <p>    Our CSA is an alternative to the grocery store. Rather than forming your diet on grocery store
+    availability, you can form our CSA (in-season) availability to fit your diet by providing feedback
+    on your preferences. Our CSA will also educate you on seasonal availability of Kentucky
+    produce (there will be no sweet corn in May, and no strawberries in August!) Our CSA also
+    shortens the supply chain, reducing the travel mileage of your food. This means the food from
+    our CSA will be fresher, tastier, more nutritionally dense, and sometimes even less expensive
+    than the grocery store.</p>
+    <p>    If you’d like to sign up as a CSA customer, <a class="link-primary link-offset-2 link-underline-opacity-25 link-underline-opacity-100-hover" href="{{url_for('register')}}">click this link</a> to be directed to our CSA sign up
+    page. Upon registering for an account, we may contact you by phone to establish contact. We
+    will confirm your access to the site and you will then receive a welcome email. Then you can
+    begin placing weekly orders through the login page link on the left side bar. If you’d like to get
+    more information about our CSA, or have interest in starting a pickup location for your business
+    or neighborhood, please call, text or email us through our contact page.</p>
+    <img class="image-fluid" src="/static/photos/VeggiePile.jpg" style="width:100%;">
+
+
+
+
+
+    <h2 class="mt-5">Farming Values</h2>
+    <img class="image-fluid" src="/static/photos/ArronTouching.jpg" style="width:100%;">
+    <p>    Our farm operates on a few simple principles: Feed People, Feed Soil, and economically
+    support a family (plus several local employees).</p>
+    <p>    We grow more than 40 different crops of mixed vegetables, fruits, greens, and herbs on our
+    Certified Organic, minimal-tillage, space-intensive, no-spray farm. These crops are selected
+    based on customer popularity, as well as suitability for our region, and vigor of growth to ward off
+    pests and disease. We believe that healthy soil grows healthy plants which have natural resistance
+    to pests and disease. We supercharge our soil health by dedicating a third of our outdoor fields each year entirely to <a class="link-primary link-offset-2 link-underline-opacity-25 link-underline-opacity-100-hover" target="_blank" href="https://sare.org/resources/cover-crops">cover-cropping</a>. Additionally, all of our outdoor fields are
+    cover-cropped at least once per year. We also use a small mountain of 150 cubic yards of soil-
+    building compost each year.</p>
+
+
+
+
+
+    <h2 class="mt-5">Partner Farms</h2>
+    <p>We partner with several Certified Organic and Natural Farms within a 10 mile radius of our farm
+    to provide even more variety to our selection. These farmers grow specific vegetables and fruits
+    that we don’t grow, or of which we only grow limited quantities. Some products you may see
+    offered from local farms include: sweet corn, watermelon and cataloupe, blueberries,
+    strawberries, and sweet potatoes, to name a few. We trust these farmers and eat their produce
+    in our own meals.</p>
+    <img class="image-fluid" src="/static/photos/VeggieStand.jpg" style="width:100%;">
+
+
+
+
+    <h2 class="mt-5">Where to find our produce</h2>
+    <a class="link-primary link-offset-2 link-underline-opacity-25 link-underline-opacity-100-hover" href="{{url_for('register')}}">
+        <p>The best way to get our produce is to become a CSA partner.</p>
+    </a>
+    <h4>You can also find our produce at:</h4>
+    <li>Boyle County Farmer’s Market at Constitution Square: Danville, KY April-Nov</li>
+    <li>Lavern’s Country Market: Liberty, KY</li>
+    <li>Danville Nutrition Center, Danville, KY</li>
+    <h4 class="mt-3">Restaurants serving Foxfire produce:</h4>
+    <li>The Parthenon in Danville, KY</li>
+    <li class="mb-5">Bread of Life in Liberty, KY</li>
+</div>
+{% endblock content %}
+{% block posts %}
+<div class="col-2 justify-content-end">
+    <nav class="navbar navbar-expand-lg bg-body-tertiary">
+        <div class="container-fluid">
+            <a class="navbar-brand"><h2>Blog Posts</h2></a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav2">
+                <ul class="navbar-nav" style="flex-direction: column;">
+                    {% for p in posts %}
+                    <li class="nav-item active">
+                        <a href="{{ url_for('post', post_id=p.id) }}">{{ p.title }}</a>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </nav>
+</div>
+{% endblock posts %}

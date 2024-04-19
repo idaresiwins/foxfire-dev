@@ -1,0 +1,17 @@
+{% extends "index.html" %}
+
+{% block content %}
+<div class="position-absolute top-0 start-50 translate-middle-x">
+    <h2 class="mt-5">Where to find our produce</h2>
+    <a class="link-primary link-offset-2 link-underline-opacity-25 link-underline-opacity-100-hover" href="{{url_for('register')}}">
+        <p>The best way to get our produce is to become a CSA partner.</p>
+    </a>
+    <h4>You can also find our produce at:</h4>
+    <li>Boyle County Farmer’s Market at Constitution Square: Danville, KY April-Nov</li>
+    <li>Lavern’s Country Market: Liberty, KY</li>
+    <h4 class="mt-3">Restaurants serving Foxfire produce:</h4>
+    <li>The Parthenon in Danville, KY</li>
+    <li>Bread of Life in Liberty, KY</li>
+    <li>Danville Nutrition Center, Danville, KY</li>
+</div>
+{% endblock %}

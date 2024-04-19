@@ -1,0 +1,54 @@
+{% extends "admin_index.html" %}
+{% block content %}
+<div class="passwdbox">
+    <div class="content-section">
+        <form method="POST" action="" enctype="multipart/form-data">
+            {{ form.hidden_tag() }}
+            <fieldset class="form-group">
+                <legend class="border-bottom mb-4">New Picture Upload</legend>
+                <div class="form-group", style="font-family: Arial, Helvetica, sans-serif;">
+                    {{ form.name.label(class="form-control-label") }}
+                    {% if form.name.errors %}
+                    {{ form.name(class="form-control form-control-lg is-invalid") }}
+                    <div class="invalid-feedback">
+                        {% for error in form.name.errors %}
+                        <span>{{ error }}</span>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    {{ form.name(class="form-control form-control-lg", style="font-family: Arial, Helvetica, sans-serif;") }}
+                    {% endif %}
+                </div>
+                <div class="form-check" style="font-size:1em; text-align:left;">
+                    {{ form.image(class="form-control-file") }}
+                    {% if form.image.errors %}
+                    {% for error in form.image.errors %}
+                    <span class="text-danger">{{ error }}</span></br>
+                    {% endfor %}
+                    {% endif %}
+                </div>
+            </fieldset>
+            <div class="form-group">
+                {{ form.submit(class="btn btn-primary btn-lg") }}
+            </div>
+        </form>
+    </div>
+</div>
+<div>
+    <div class="footer">
+        <p >Clicking on photos will delete them.</p>
+    </div>
+    <div class="footer">
+        <div class="container">
+            {% for pic in pics %}
+            <div class="grid-item">
+                {% if pic.thumbnail %}
+                <a href="/picture/{{ pic.id }}/delete"><img src="/static/photos/{{pic.thumbnail}}" class="img-thumbnail"></a>
+                {% else %}
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock content %}

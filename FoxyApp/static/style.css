@@ -1,0 +1,161 @@
+@media (min-width: 992px) {
+    .navbar,
+    .container-fluid,
+    .navbar-expand-lg,
+    .navbar-collapse,
+    .navbar-nav,
+    .collapse{
+        flex-direction: column;
+    }
+    .navbar{
+        width: 100%;
+        height: 100vh;
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+}
+
+.article-content {
+  white-space: pre-line;
+}
+
+.body-text {
+    margin-left: 150px;
+    font-size: 2em;
+}
+
+a:link { 
+    text-decoration: none; 
+    color:black;
+}
+
+a:visited { 
+    text-decoration: none; 
+    color: black;
+}
+
+a:hover { 
+    text-decoration: none; 
+    color:green;
+}
+
+a:active { 
+    text-decoration: none; 
+    color: gray;
+}
+
+
+.title {
+    font-size: 4em;
+    font-weight:Bold;
+    text-align: center;
+    -webkit-background-size: cover;
+    -moz-background-size: cover;
+    -o-background-size: cover;
+    background-size: cover;
+    font-family: 'Cinzel', cursive;}
+
+  
+.footer {
+    text-align: center;
+    height: 100%;
+    margin: auto;
+    font-size:2em;
+    font-family: 'Cinzel', cursive;
+    -webkit-background-size: cover;
+    -moz-background-size: cover;
+    -o-background-size: cover;
+    background-size: cover;}
+
+  
+.side {
+    height: 100%
+    width: 10%;
+    float:up;
+    left: 0;
+    top: 0;
+    background-color: lightblue
+    font-family: 'Cinzel', cursive;
+    -webkit-background-size: cover;
+    -moz-background-size: cover;
+    -o-background-size: cover;
+    background-size: cover;}
+
+
+  @keyframes myfirst {
+    0% {
+    opacity: 0;
+    }
+    100% {
+    visibility: visible;
+    opacity: 1;
+  }
+}*/
+
+.contact {
+    height: 100%
+    width: 10%;
+    position: absolute;
+    right: 0;
+    top: 0;
+    font-family: 'Cinzel', cursive;
+    font-size:2em%;
+    font-weight: bold;
+    -webkit-background-size: cover;
+    -moz-background-size: cover;
+    -o-background-size: cover;
+    background-size: cover;}
+
+
+
+  @keyframes myfirst {
+    0% {
+    opacity: 0;
+    }
+    100% {
+    visibility: visible;
+    opacity: 1;
+  }
+}*/
+
+.grid-container {
+  display: grid;
+  grid-template-columns: auto auto auto;
+
+  /*padding: 10px;*/
+}
+.grid-item {
+  height:100%;
+  float:left;
+  float:up;
+  background-color: rgba(255, 255, 255, 0.8);
+  border: 1px solid rgba(0, 0, 0, 0.8);
+  font-size: 1em;
+  text-align: center;
+}
+
+.grid-item2 {
+  height:100%;d
+  background-color: rgba(255, 255, 255, 0.8);
+  border: 1px solid rgba(0, 0, 0, 0.8);
+  font-size: 1em;
+  text-align: center;
+}
+
+/* Create three equal columns that floats next to each other */
+.xcolumn {
+  float: left;
+  width: 30.33%;
+  padding: 1%;
+
+
+.passwdbox {
+    font-size:2em;
+    padding:10%;
+    border: 5px;
+    text-align: center;
+    width:50%:
+    height: 80%;
+    margin: auto;
+}

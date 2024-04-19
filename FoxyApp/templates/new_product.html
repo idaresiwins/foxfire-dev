@@ -1,0 +1,67 @@
+{% extends "admin_index.html" %}
+{% block content %}
+<div class="passwdbox">
+    <div class="content-section">
+        <form method="POST" action="" enctype="multipart/form-data">
+            {{ form.hidden_tag() }}
+            <fieldset class="form-group">
+                <legend class="border-bottom mb-4">New Product Entry</legend>
+                <div class="form-group", style="font-family: Arial, Helvetica, sans-serif;">
+                    {{ form.veg_name.label(class="form-control-label") }}
+                    {% if form.veg_name.errors %}
+                    {{ form.veg_name(class="form-control form-control-lg is-invalid") }}
+                    <div class="invalid-feedback">
+                        {% for error in form.veg_name.errors %}
+                        <span>{{ error }}</span>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    {{ form.veg_name(class="form-control form-control-lg", style="font-family: Arial, Helvetica, sans-serif;") }}
+                    {% endif %}
+                </div>
+                <div class="form-group">
+                    {{ form.veg_price.label(class="form-control-label") }}
+                    {% if form.veg_price.errors %}
+                    {{ form.veg_price(class="form-control form-control-lg is-invalid") }}
+                    <div class="invalid-feedback">
+                        {% for error in form.veg_price.errors %}
+                        <span>{{ error }}</span>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    {{ form.veg_price(class="form-control form-control-lg", style="font-family: Arial, Helvetica, sans-serif;") }}
+                    {% endif %}
+                </div>
+                <div class="form-group">
+                    {{ form.veg_url.label(class="form-control-label") }}
+                    {% if form.veg_url.errors %}
+                    {{ form.veg_url(class="form-control form-control-lg is-invalid") }}
+                    <div class="invalid-feedback">
+                        {% for error in form.veg_url.errors %}
+                        <span>{{ error }}</span>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    {{ form.veg_url(class="form-control form-control-lg", style="font-family: Arial, Helvetica, sans-serif;") }}
+                    {% endif %}
+                </div>
+                <div class="form-check" style="font-size:1em; text-align:left;">
+                    {{ form.veg_image(class="form-control-file") }}
+                    {% if form.veg_image.errors %}
+                    {% for error in form.veg_image.errors %}
+                    <span class="text-danger">{{ error }}</span></br>
+                    {% endfor %}
+                    {% endif %}
+                </div>
+                <div class="form-check" style="font-size:1em; text-align:left;">
+                    {{ form.veg_sale(class="form-check-input") }}
+                    {{ form.veg_sale.label(class="form-check-label") }}
+                </div>
+            </fieldset>
+            <div class="form-group">
+                {{ form.submit(class="btn btn-primary btn-lg") }}
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock content %}
