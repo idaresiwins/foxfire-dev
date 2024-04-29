@@ -6,14 +6,23 @@ from wtforms import StringField, PasswordField, SubmitField, BooleanField, Email
 from wtforms.validators import DataRequired, Length, Email, EqualTo, ValidationError
 
 
+def no_http_characters(form, field):
+    disallowed_characters = {'<', '>', '"', '&',"|", "\\", "!", "@", "#", "$", "%", "^", "*",
+                             "_", "+", "=", "{", "}", "[", "]", ";", ",", "/",
+                             ":", "?", "`", "~"}
+    for char in disallowed_characters:
+        if char in field.data:
+            raise ValidationError(f"Input contains disallowed character: {char}, Please do not use \" < > & | \\ ! / @ # $ % ^ * _ + = {{ }} [ ] ; , : ? ` ~ ")
+
+
 class RegistrationForm(FlaskForm):
-    name = StringField("Name", validators=[DataRequired(), Length(min=3, max=20)])
+    name = StringField("Name", validators=[DataRequired(), Length(min=3, max=20), no_http_characters])
     email = EmailField("Email", validators=[DataRequired(), Email()])
-    address = StringField("Address", validators=[DataRequired()])
-    city = StringField("City", validators=[DataRequired()])
-    state = StringField("State", validators=[DataRequired()])
-    zipcode = StringField("Zip Code", validators=[DataRequired()])
-    phone = StringField("Phone Number", validators=[DataRequired()])
+    address = StringField("Address", validators=[DataRequired(), no_http_characters])
+    city = StringField("City", validators=[DataRequired(), no_http_characters])
+    state = StringField("State", validators=[DataRequired(), no_http_characters])
+    zipcode = StringField("Zip Code", validators=[DataRequired(), no_http_characters])
+    phone = StringField("Phone Number", validators=[DataRequired(), no_http_characters])
     route = RadioField('How did you hear about us?:', choices=[('In Person','We met in person.'),('Boyle Farmers Market','Boyle Farmers Market'),('Brochure','Brochure'),('other','other')], validators=[DataRequired()])
     #password = PasswordField("Password", validators=[DataRequired(), Length(min=10, max=128)])
     #confirm_password = PasswordField("Confirm Password", validators=[DataRequired(), EqualTo('password')])
@@ -33,13 +42,13 @@ class LoginForm(FlaskForm):
 
 
 class AccountForm(FlaskForm):
-    name = StringField("Name", validators=[Length(min=3, max=20)])
+    name = StringField("Name", validators=[Length(min=3, max=20), no_http_characters])
     email = EmailField("Email", validators=[Email()])
-    address = StringField("Address", validators=[Length(min=3, max=200)])
-    city = StringField("City", validators=[Length(min=1, max=20)])
-    state = StringField("State", validators=[Length(min=2, max=20)])
-    zipcode = StringField("Zip Code", validators=[Length(min=5, max=10)])
-    phone = StringField("Phone Number", validators=[Length(min=7, max=20)])
+    address = StringField("Address", validators=[Length(min=3, max=200), no_http_characters])
+    city = StringField("City", validators=[Length(min=1, max=20), no_http_characters])
+    state = StringField("State", validators=[Length(min=2, max=20), no_http_characters])
+    zipcode = StringField("Zip Code", validators=[Length(min=5, max=10), no_http_characters])
+    phone = StringField("Phone Number", validators=[Length(min=7, max=20), no_http_characters])
     dlt = BooleanField("Delete account permanently?")
     submit = SubmitField("Update")
 
@@ -49,16 +58,19 @@ class AccountForm(FlaskForm):
             if user:
                 raise ValidationError('That email is taken. Please choose a different one.')
 
+
+
 class EditAccountForm(FlaskForm):
-    name = StringField("Name", validators=[Length(min=3, max=20)])
+    name = StringField("Name", validators=[Length(min=3, max=20), no_http_characters])
     email = EmailField("Email", validators=[Email()])
-    address = StringField("Address", validators=[Length(min=3, max=200)])
-    city = StringField("City", validators=[Length(min=1, max=20)])
-    state = StringField("State", validators=[Length(min=2, max=20)])
-    zipcode = StringField("Zip Code", validators=[Length(min=5, max=10)])
-    phone = StringField("Phone Number", validators=[Length(min=7, max=20)])
+    address = StringField("Address", validators=[Length(min=3, max=200), no_http_characters])
+    city = StringField("City", validators=[Length(min=1, max=20), no_http_characters])
+    state = StringField("State", validators=[Length(min=2, max=20), no_http_characters])
+    zipcode = StringField("Zip Code", validators=[Length(min=5, max=10), no_http_characters])
+    phone = StringField("Phone Number", validators=[Length(min=7, max=20), no_http_characters])
     dlt = BooleanField("Delete account permanently?")
     submit = SubmitField("Update")
+
 
 class NewProductForm(FlaskForm):
     veg_name = StringField("Product Name", validators=[DataRequired()])
@@ -93,6 +105,7 @@ class PostForm(FlaskForm):
     visible = BooleanField("Make post visible in Blog?")
     dlt = BooleanField("Delete post permanently?")
 
+
 class NewPictureForm(FlaskForm):
     name = StringField("Name", validators=[DataRequired()])
     image = FileField("Image", validators=[FileAllowed(["jpg", "png"])])
@@ -102,6 +115,7 @@ class NewPictureForm(FlaskForm):
 class ToggleForm(FlaskForm):
     set_toggle = BooleanField("Toggle Ordering")
     submit = SubmitField('Toggle')
+
 
 class CycleForm(FlaskForm):
     set_toggle = BooleanField("Cycle Google Sheets?")

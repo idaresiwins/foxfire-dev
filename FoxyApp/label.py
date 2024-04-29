@@ -9,12 +9,12 @@ def label(current_user, receipt, pickup, total, dt, comment):
     pickup = f"{pickup}"
     receipt = f"{receipt}"
     comment = f"Comment: {comment}"
-    filename = f"FoxyApp/static/labels/{name}{dt}.jpg"
+    filename = f"/var/www/foxfirefarmky.com/FoxfireApp/FoxyApp/static/labels/{name}{dt}.jpg"
     #  font sizes
-    fnt = ImageFont.truetype('arial.ttf', 25)
-    name_font = ImageFont.truetype('arial.ttf', 80)
-    receipt_font = ImageFont.truetype('arial.ttf', 60)
-    pickup_font = ImageFont.truetype('arial.ttf', 60)
+    fnt = ImageFont.truetype('DejaVuSans.ttf', 25)
+    name_font = ImageFont.truetype('DejaVuSans.ttf', 80)
+    receipt_font = ImageFont.truetype('DejaVuSans.ttf', 30)
+    pickup_font = ImageFont.truetype('DejaVuSans.ttf', 60)
     # create new image
     image = Image.new(mode = "RGB", size = (696,1000), color = "white")   # height x width
     draw = ImageDraw.Draw(image)
