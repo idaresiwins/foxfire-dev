@@ -1,6 +1,8 @@
 import gspread
 from datetime import datetime
-sa = gspread.service_account(filename="D:\\Downloads\\foxfire-helical-chemist-389721-702650f035f7.json")
+import os
+from FoxyApp import app
+sa = gspread.service_account(filename=os.path.join(app.root_path, "foxfire-helical-chemist-389721-702650f035f7.json"))
 
 sh = sa.open("Foxfire Farms KY (Responses)")
 wks_order = sh.worksheet("Mock Orders Sheet")

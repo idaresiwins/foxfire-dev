@@ -350,7 +350,8 @@ Your total will be: ${total}
 #
 #Customer total is: {total}
 #'''
-    with app.open_resource(f"C:\\Users\\josh\\PycharmProjects\\foxfireky\\FoxyApp\\orderforms\\{user.id}{dt}.pdf") as fp:
+    path = os.path.join(app.root_path, "orderforms", f"{user.id}{dt}.pdf")
+    with app.open_resource(path) as fp:
         msg.attach(f"{user.id}{dt}.pdf", "text/pdf", fp.read())
     mail.send(msg)
 #    with app.open_resource(f"C:\\Users\\josh\\PycharmProjects\\foxfireky\\FoxyApp\\orderforms\\{user.id}{dt}.pdf") as fp:

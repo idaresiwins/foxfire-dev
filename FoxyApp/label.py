@@ -1,5 +1,6 @@
 from PIL import Image, ImageDraw, ImageFont
-
+from FoxyApp import app
+import os
 def label(current_user, receipt, pickup, total, dt, comment):
     #  declare variables
     name = f"{current_user.name}"
@@ -9,7 +10,7 @@ def label(current_user, receipt, pickup, total, dt, comment):
     pickup = f"{pickup}"
     receipt = f"{receipt}"
     comment = f"Comment: {comment}"
-    filename = f"/var/www/foxfirefarmky.com/FoxfireApp/FoxyApp/static/labels/{name}{dt}.jpg"
+    filename = os.path.join(app.root_path, "static/labels", f"{name}{dt}.jpg")
     #  font sizes
     fnt = ImageFont.truetype('DejaVuSans.ttf', 25)
     name_font = ImageFont.truetype('DejaVuSans.ttf', 80)
