@@ -12,7 +12,7 @@ import secrets
 import os
 from PIL import Image, ImageOps
 from datetime import datetime
-#
+
 
 @app.route("/admin", methods=["POST", "GET"])
 @login_required
