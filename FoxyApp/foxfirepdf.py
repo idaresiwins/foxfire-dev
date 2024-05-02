@@ -12,7 +12,7 @@ def createInvoice(user, items, pickup, total, dt, comment):
     pdf.cell(200, 10, txt=f'Email: {user.email}', ln=5, align='L')
     pdf.cell(200, 10, txt=f' ', ln=6, align='L')
     pdf.cell(200, 10, txt=f'Items in order: ', ln=7, align='L')
-    pdf.cell(200, 10, txt=f'{items}', ln=8, align='L')
+    pdf.multi_cell(200, 10, txt=f'{items}')
     pdf.cell(200, 10, txt=f' ', ln=9, align='L')
     pdf.cell(200, 10, txt=f'Pickup location:', ln=10, align='L')
     pdf.cell(200, 10, txt=f'{pickup}', ln=11, align='L')

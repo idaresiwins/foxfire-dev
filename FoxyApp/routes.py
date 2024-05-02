@@ -19,13 +19,19 @@ from datetime import datetime
 def admin():
     if current_user.email in admins:
         form = CycleForm()
-        query = Product.query.order_by(Product.veg_name)
-        lis = list(query)
-        prods = ["Name","Location","Total","Comments"]
-        for item in lis:
-            prods.append(item.veg_name)
         if request.method == "POST" and form.set_toggle.data == True:
+            query = Product.query.order_by(Product.veg_name).filter_by(veg_sale=True)
+            lis = list(query)
+            prods = ["Name", "Location", "Total", "Comments"]
+            for item in lis:
+                prods.append(item.veg_name)
             cycle(prods)
+            folder_path = 'FoxyApp/static/labels'
+            entries = os.listdir(folder_path)
+            files = [entry for entry in entries if os.path.isfile(os.path.join(folder_path, entry))]
+            for f in files:
+                label = os.path.join(app.root_path, "static/labels", f)
+                os.remove(label)
             return render_template("admin.html", form=form)
         else:
             folder_path = 'FoxyApp/static/labels'
@@ -144,6 +150,8 @@ def edit_products(veg_id):
                 form.veg_sale.data = 1
             else:
                 form.veg_sale.data = 0
+
+            #Check to see if the For Sale status has been changed
             if int(prods.veg_sale) != int(form.veg_sale.data):
                 prods.veg_sale = form.veg_sale.data
                 # update order form with new products so columns are not messed up
@@ -208,8 +216,9 @@ def register():
     form = RegistrationForm()
     if form.validate_on_submit():
         h_password = secrets.token_hex(12)
-        account_token = get_account_token(form.name.data, h_password, form.address.data, form.city.data, form.state.data, form.zipcode.data, form.phone.data, form.email.data)
-        new_account_email(form.name.data, h_password, form.address.data, form.city.data, form.state.data, form.zipcode.data, form.phone.data, form.email.data, form.route.data, account_token)
+        hashed_password = bcrypt.generate_password_hash(h_password).decode('utf-8')
+        account_token = get_account_token(form.name.data, hashed_password, form.address.data, form.city.data, form.state.data, form.zipcode.data, form.phone.data, form.email.data)
+        new_account_email(form.name.data, form.address.data, form.city.data, form.state.data, form.zipcode.data, form.phone.data, form.email.data, form.route.data, account_token)
 
         #newUser = User(
         #    name=form.name.data,
@@ -239,9 +248,10 @@ def create_dummy():
         form = RegistrationForm()
         if form.validate_on_submit():
             h_password = secrets.token_hex(12)
+            hashed_password = bcrypt.generate_password_hash(h_password).decode('utf-8')
             newUser = User(
                 name=form.name.data,
-                password=h_password,
+                password=hashed_password,
                 address=form.address.data,
                 city=form.city.data,
                 state=form.state.data,
@@ -354,7 +364,7 @@ Your total will be: ${total}
     with app.open_resource(path) as fp:
         msg.attach(f"{user.id}{dt}.pdf", "text/pdf", fp.read())
     mail.send(msg)
-#    with app.open_resource(f"C:\\Users\\josh\\PycharmProjects\\foxfireky\\FoxyApp\\orderforms\\{user.id}{dt}.pdf") as fp:
+#    with app.open_resource(app.root_path, "orderforms", f"{user.id}{dt}.pdf") as fp:
 #        msg2.attach(f"{user.id}{dt}.pdf", "text/pdf", fp.read())
 #    mail.send(msg2)
 
@@ -412,7 +422,7 @@ def ordering(user_id):
         # get a ton of items like "Lettuce: 0" in the email.
 
         # todo Why cant I just use 'prods'? when would a product that is not for sale be found in an order?
-        for key in prods2:
+        for key in prods:
             for i in purch:# add ordered items to list
                 if key.veg_name == i and not purch[i] == '' and not i == 'fulfill_location':  # find number of items 'purch[i]' and multiply by price 'key[0]'
                     if purch[i].isdigit():
@@ -441,7 +451,7 @@ def ordering(user_id):
 
         # create a PDF invoice, and send an email to the customer.
         receipt = items.replace(",", "\n")
-        createInvoice(user, items, pickup_address, total, dt, comment)
+        createInvoice(user, receipt, pickup_address, total, dt, comment)
         send_receipt_email(user, receipt, pickup_address, total, dt, comment)
         label(user, receipt, pickup, total, dt, comment)
 
@@ -686,7 +696,7 @@ Once you have finished signup, and logged into your account, you can begin purch
 '''
     mail.send(msg)
 
-def new_account_email(name, password, address, city, state, zipcode, phone, email, route, account_token):
+def new_account_email(name, address, city, state, zipcode, phone, email, route, account_token):
 
     msg = Message('New Account Request',
                   sender='noreply.pwresets.foxfire@gmail.com',
