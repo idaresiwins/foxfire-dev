@@ -4,7 +4,7 @@ def createInvoice(user, items, pickup, total, dt, comment):
     pdf = FPDF()
     pdf.add_page()
     pdf.set_font("Arial", size=10)
-    pdf.image("FoxyApp/static/Photos/sprouts.png", x=None, y=None, w=50, h=50, type='PNG', link='')
+    pdf.image("FoxyApp/static/photos/sprouts.png", x=None, y=None, w=50, h=50, type='PNG', link='')
     pdf.cell(200, 10, txt=f'Invoice number: {user.id}{dt}',ln=1, align='C')
     pdf.cell(200, 10, txt='Customer Info:', ln=2, align='L')
     pdf.cell(200, 10, txt=f'Name: {user.name}', ln=3, align='L')

@@ -422,14 +422,17 @@ def ordering(user_id):
         # get a ton of items like "Lettuce: 0" in the email.
 
         # todo Why cant I just use 'prods'? when would a product that is not for sale be found in an order?
+        # todo we might need to go back to prods2. I want to see if this breaks anything. if we do that,
+        #    we need to remove the filters in the add, delete, and edit products routes
+
         for key in prods:
             for i in purch:# add ordered items to list
                 if key.veg_name == i and not purch[i] == '' and not i == 'fulfill_location':  # find number of items 'purch[i]' and multiply by price 'key[0]'
                     if purch[i].isdigit():
                         cst = float(purch[i]) * float(key.veg_price)
                         cost += cst
-                        items_all += f"{purch[i]},"
-                        items += f"{purch[i]} {i},"
+                        items_all += f"{purch[i]}," #add only the number of items, this will be sent to the google sheet
+                        items += f"{purch[i]} {i}," #Add the number of items and the name of the item for the customer receipt, and email.
                     else:
                         flash("Only numbers may be used in the order form.", "danger")
                         return redirect(url_for('ordering', item_matrix=prods))
