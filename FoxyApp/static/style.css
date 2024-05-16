@@ -16,9 +16,6 @@
 
 }
 
-.article-content {
-  white-space: pre-line;
-}
 
 .body-text {
     margin-left: 150px;
@@ -44,6 +41,12 @@ a:active {
     text-decoration: none; 
     color: gray;
 }
+
+
+.article-content {
+  white-space: pre-line;
+}
+
 
 
 .title {
