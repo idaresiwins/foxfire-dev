@@ -15,3 +15,10 @@ def cycle(prods):
     sh.add_worksheet(title="Mock Orders Sheet", rows=100, cols=200)
     wks_order = sh.worksheet("Mock Orders Sheet")
     wks_order.append_row(prods)
+
+def refresh_worksheet():
+    sh = sa.open("Foxfire Farms KY (Responses)")
+    orders_raw = sh.worksheet("Mock Orders Sheet")
+    orders_raw = orders_raw.get_all_values()
+    orders = [x[:3] for x in orders_raw]
+    return orders

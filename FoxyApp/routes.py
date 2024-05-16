@@ -4,8 +4,8 @@ from flask_mail import Message
 from FoxyApp import app, bcrypt, db, mail, admins, api_key
 from FoxyApp.forms import RegistrationForm, LoginForm, AccountForm, EditAccountForm, NewProductForm, RequestResetForm, ResetPasswordForm, PostForm, NewPictureForm, ToggleForm, CycleForm
 from FoxyApp.models import User, Product, Post, Picture, Toggle
-from FoxyApp.foxfiresheet import wks_order, wks_customer_details, wks_label, cycle
-from FoxyApp.foxfirepdf import createInvoice
+from FoxyApp.foxfiresheet import wks_order, wks_customer_details, wks_label, cycle, refresh_worksheet
+from FoxyApp.foxfirepdf import createInvoice, driver_sheet
 from FoxyApp.foxfiretok import get_account_token, approve_account_token
 from FoxyApp.label import label
 import secrets
@@ -52,6 +52,17 @@ def labels(label):
     else:
         flash("You are not authorized.", "danger")
 
+@app.route("/driver_form", methods=["POST", "GET"])
+@login_required
+def driver_form():
+    if current_user.email in admins:
+        orders = refresh_worksheet()
+        driver_sheet(orders)
+        path = "orders.pdf"
+        return redirect(url_for('static', filename=path))
+
+    else:
+        flash("You are not authorized.", "danger")
 
 @app.route("/orderform/<pdf>", methods=["POST", "GET"])
 @login_required
@@ -383,7 +394,7 @@ def ordering(user_id):
     prods2 = Product.query.order_by(Product.veg_name)
     user = User.query.filter_by(id=user_id).first()
     toggle = Toggle.query.filter_by(id=1).first()
-    fulfilment_address = user.address + " " + user.city + " " + user.state + " " + user.zipcode
+    fulfilment_address = user.address
     if request.method == "POST":
 
         #declare variables
