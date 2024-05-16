@@ -23,11 +23,10 @@ def createInvoice(user, items, pickup, total, dt, comment):
     pdf.output(f"FoxyApp/orderforms/{user.id}{dt}.pdf")
 
 def driver_sheet(orders):
-    orders = orders[1:]
     # Sorting the orders by pickup location (index 1 of the sublists)
     orders.sort(key=lambda x: x[1])
     # Calculate total and average
-    total_amount = sum(float(order[2]) for order in orders)
+    total_amount = sum(float(order[2]) for order in orders if order[0] != "Name")
     average_amount = total_amount / len(orders) if orders else 0
     fri = friday()
     # Define class for PDF
@@ -55,10 +54,13 @@ def driver_sheet(orders):
     # Add the orders to the PDF
     pdf.set_font('Arial', '', 12)
     for order in orders:
-        pdf.cell(40, 10, order[0], 1)
-        pdf.cell(100, 10, order[1], 1)
-        pdf.cell(20, 10, order[2], 1)
-        pdf.cell(30, 10, "", 1, ln=1)
+        if order[0] == "Name":
+            continue
+        else:
+            pdf.cell(40, 10, order[0], 1)
+            pdf.cell(100, 10, order[1], 1)
+            pdf.cell(20, 10, order[2], 1)
+            pdf.cell(30, 10, "", 1, ln=1)
 
     # Add total and average calculations to PDF
     pdf.set_font('Arial', 'B', 12)

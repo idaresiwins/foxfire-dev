@@ -6,23 +6,23 @@
         <p>Ordering is open form Monday morning until Wednesday at 6PM</p>
         <p>Click the tiles for more information.</p>
     </div>
-    <div class="footer">
+
         <div class="grid-container">
             {% for veggie in item_matrix %}
-            <div class="grid-item">
+            <div class="grid-item p-2" style="min-width: 300px; min-height: 250px;">
                 {% if veggie.veg_url %}<a href="{{ veggie.veg_url }}" target="_blank">
                 {% else %}
                 {% endif %}
                 <p>{{ veggie.veg_name }}</p>
-                {% if veggie.veg_image %}
-                <img src="/static/uploads/{{ veggie.veg_image }}">
+                {% if veggie.veg_image != 'nia.png'%}
+                <img src="/static/uploads/{{ veggie.veg_image }}" width="80" height="120">
                 {% else %}
-                <img src="/static/nia.png">
+                <img src="/static/nia.png" width="120" height="120">
                 {% endif %}
-                <p style="font-size:50%;">${{ veggie.veg_price }}</p></a>
+                <p>${{ veggie.veg_price }}</p></a>
             </div>
             {% endfor %}
         </div>
-    </div>
+
 </div>
 {% endblock %}
