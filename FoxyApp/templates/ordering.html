@@ -17,9 +17,9 @@
             {% endif %}
             <p>{{veggie.veg_name}}</p>
             {% if veggie.veg_image != 'nia.png' %}
-              <img src="/static/uploads/{{ veggie.veg_image }}" width="80" height="120">
+              <img src="/static/uploads/{{ veggie.veg_image }}" width="80" height="120"/>
             {% else %}
-              <img src="{{url_for('static', filename='nia.png')}}" width="80" height="120">
+              <img src="{{url_for('static', filename='nia.png')}}" width="80" height="120"/>
             {% endif %}</a>
             <p>Quantity <input type="text" name="{{ veggie.veg_name }}" /></p>
             <p>${{veggie.veg_price}}</p>
