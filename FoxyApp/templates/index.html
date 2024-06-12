@@ -73,16 +73,16 @@
                         </nav>
                     </div>
                     <div class="col">
-                        {% block content %}{% endblock content %}
                         {% with messages = get_flashed_messages(with_categories=true) %}
                         {% if messages %}
                         {% for category, message in messages %}
                         <div class="alert alert-{{ category }}", style="font-size:em1;">
-                            {{ message }}
+                        {{ message }}
                         </div>
                         {% endfor %}
                         {% endif %}
                         {% endwith %}
+                        {% block content %}{% endblock content %}
                     </div>
                     {% block posts %}{% endblock posts %}
                 </div>

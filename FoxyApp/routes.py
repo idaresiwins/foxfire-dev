@@ -446,7 +446,7 @@ def ordering(user_id):
                         items += f"{purch[i]} {i}," #Add the number of items and the name of the item for the customer receipt, and email.
                     else:
                         flash("Only numbers may be used in the order form.", "danger")
-                        return redirect(url_for('ordering', item_matrix=prods))
+                        return redirect(url_for('ordering', item_matrix=prods, user_id=user_id))
                     break  # do not keep comparing after a match is found
             if key.veg_name != i and not i == 'fulfill_location':  # Set existing but unordered items in purchase to zero to maintain columns
                 items_all += "0" + ","
