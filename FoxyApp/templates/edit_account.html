@@ -105,6 +105,15 @@
             {{ form.dlt(class="form-check-input", checked=False) }}
             {{ form.dlt.label(class="form-check-label") }}
         </div>
+        <div class="form-check mt-2 mb-2" style="font-size:1em; text-align:left;">
+            {% if user.prepaid == '0' %}
+            {{ form.prepaid(class="form-check-input", checked=False) }}
+            {{ form.prepaid.label(class="form-check-label") }}
+            {% else %}
+            {{ form.prepaid(class="form-check-input", checked=True) }}
+            {{ form.prepaid.label(class="form-check-label") }}
+            {% endif %}
+        </div>
     </form>
 </div>
 </div>

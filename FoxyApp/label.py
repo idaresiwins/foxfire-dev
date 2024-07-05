@@ -11,11 +11,13 @@ def label(current_user, receipt, pickup, total, dt, comment):
     pickup = f"{pickup}"
     receipt = f"{receipt}"
     comment = f"Comment: {comment}"
+    balance = "Balance:$______"
     date = friday()
     filename = os.path.join(app.root_path, "static/labels", f"{name}{dt}.jpg")
     #  font sizes
     fnt = ImageFont.truetype('DejaVuSans.ttf', 25)
     name_font = ImageFont.truetype('DejaVuSans.ttf', 80)
+    balance_font = ImageFont.truetype('DejaVuSans.ttf', 80)
     receipt_font = ImageFont.truetype('DejaVuSans.ttf', 30)
     pickup_font = ImageFont.truetype('DejaVuSans.ttf', 60)
     date_font = ImageFont.truetype('DejaVuSans.ttf', 60)
@@ -26,26 +28,36 @@ def label(current_user, receipt, pickup, total, dt, comment):
     #  declare widths and heights for all text
     farm_width, farm_height = draw.textsize(farm_address, font=fnt)
     name_width, name_height = draw.textsize(name2, font=name_font)
+    balance_width, balance_height = draw.textsize(balance, font=balance_font)
     pickup_width, pickup_height = draw.textsize(pickup, font=pickup_font)
     comment_width, comment_height = draw.textsize(comment, font=fnt)
     receipt_width, receipt_height = draw.textsize(receipt, font=receipt_font)
     date_width, date_height = draw.textsize(receipt, font=receipt_font)
+
+    #  add height of "Balance" line if customer is prepaid
+    if current_user.prepaid == "0":
+        balance_height = 0
+
 
     draw.text((10,10), f"{farm_address}", font=fnt, fill=(0,0,0))
 
     text_next_height = 10 + farm_height + 10
     draw.text((10, text_next_height), name2, font=name_font, fill=(0, 0, 0))
 
-    text_next_height = 10 + farm_height + name_height + 20
+    if current_user.prepaid == "1":
+        text_next_height = 10 + farm_height + name_height + 20
+        draw.text((10, text_next_height), balance, font=balance_font, fill=(0, 0, 0))
+
+    text_next_height = 10 + farm_height + name_height + balance_height + 20
     draw.text((10, text_next_height), receipt, font=receipt_font, fill=(0, 0, 0))
 
-    text_next_height = 10 + farm_height + name_height + receipt_height + 20
+    text_next_height = 10 + farm_height + name_height + balance_height + receipt_height + 20
     draw.text((10, text_next_height), comment, font=fnt, fill=(0, 0, 0))
 
-    text_next_height = 10 + farm_height + name_height + receipt_height + comment_height +20
+    text_next_height = 10 + farm_height + name_height + balance_height + receipt_height + comment_height + 20
     draw.text((10, text_next_height), pickup, font=pickup_font, fill=(0, 0, 0))
 
-    text_next_height = 10 + farm_height + name_height + receipt_height + comment_height + pickup_height + 20
+    text_next_height = 10 + farm_height + name_height + balance_height + receipt_height + comment_height + pickup_height + 20
     draw.text((10, text_next_height), date, font=date_font, fill=(0, 0, 0))
 
     image.save(filename)

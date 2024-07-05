@@ -13,7 +13,6 @@ import os
 from PIL import Image, ImageOps
 from datetime import datetime
 
-
 @app.route("/admin", methods=["POST", "GET"])
 @login_required
 def admin():
@@ -162,7 +161,7 @@ def edit_products(veg_id):
             else:
                 form.veg_sale.data = 0
 
-            #Check to see if the For Sale status has been changed
+            #Check to see if the For Sale status has been changed. We need to know this to see if we need to update the orders sheet.
             if int(prods.veg_sale) != int(form.veg_sale.data):
                 prods.veg_sale = form.veg_sale.data
                 # update order form with new products so columns are not messed up
@@ -268,7 +267,8 @@ def create_dummy():
                 state=form.state.data,
                 zipcode=form.zipcode.data,
                 phone=form.phone.data,
-                email=form.email.data
+                email=form.email.data,
+                prepaid=form.prepaid.data
                 )
             db.session.add(newUser)
             db.session.commit()
@@ -316,7 +316,14 @@ def edit_account(user_id):
                 db.session.delete(user)
                 db.session.commit()
                 flash('The user has been deleted!', 'success')
-                return redirect(url_for('account_info'))
+                return redirect(url_for('admin'))
+
+            # Translate text boolean to digit
+            if form.prepaid.data == True:
+                user.prepaid = '1'
+            else:
+                user.prepaid = '0'
+
             user.name = form.name.data
             user.address = form.address.data
             user.city = form.city.data
@@ -336,7 +343,7 @@ def edit_account(user_id):
             form.zipcode.data = user.zipcode
             form.phone.data = user.phone
             form.email.data = user.email
-        return render_template('edit_account.html', title="Account", form=form)
+        return render_template('edit_account.html', title="Account", form=form, user=user)
 
 
 def send_receipt_email(user, order, pickup, total, dt, comment):
@@ -393,6 +400,8 @@ def ordering(user_id):
     prods = Product.query.order_by(Product.veg_name).filter_by(veg_sale=True)
     prods2 = Product.query.order_by(Product.veg_name)
     user = User.query.filter_by(id=user_id).first()
+    if user.prepaid == "1":
+        user.name = user.name + "(P)"
     toggle = Toggle.query.filter_by(id=1).first()
     fulfilment_address = user.address
     if request.method == "POST":
@@ -480,12 +489,19 @@ def ordering(user_id):
         # Make API call to the google sheet to post the new order.
         wks_label.append_row(order2)
         wks_order.append_row(order)
-        flash("Thanks for shopping with us. You will receive an email with your invoice shortly. We will see you soon!",
-              "info")
+
+        # Flash cost totals
         if current_user.email in admins:
+            flash(
+                f"{user.name}'s total will be ${str(round(cost, 2))}.",
+                "info")
             return redirect(url_for('account_info'))
         else:
+            flash(
+                f"Thanks for shopping with us. You will receive an email with your invoice shortly. Your total will be ${str(round(cost, 2))}. We will see you soon!",
+                "info")
             return redirect(url_for("home"))
+
     elif toggle.set_toggle == 1:
         return render_template("ordering.html", item_matrix=prods, admins=admins, user=user)
     else:

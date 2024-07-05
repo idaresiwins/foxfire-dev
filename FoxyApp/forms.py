@@ -24,6 +24,7 @@ class RegistrationForm(FlaskForm):
     zipcode = StringField("Zip Code", validators=[DataRequired(), no_http_characters])
     phone = StringField("Phone Number", validators=[DataRequired(), no_http_characters])
     route = RadioField('How did you hear about us?:', choices=[('In Person','We met in person.'),('Boyle Farmers Market','Boyle Farmers Market'),('Brochure','Brochure'),('other','other')], validators=[DataRequired()])
+    prepaid = BooleanField("Prepaid")
     #password = PasswordField("Password", validators=[DataRequired(), Length(min=10, max=128)])
     #confirm_password = PasswordField("Confirm Password", validators=[DataRequired(), EqualTo('password')])
     submit = SubmitField("Sign Up")
@@ -69,6 +70,7 @@ class EditAccountForm(FlaskForm):
     zipcode = StringField("Zip Code", validators=[Length(min=5, max=10), no_http_characters])
     phone = StringField("Phone Number", validators=[Length(min=7, max=20), no_http_characters])
     dlt = BooleanField("Delete account permanently?")
+    prepaid = BooleanField("Prepaid")
     submit = SubmitField("Update")
 
 

@@ -18,6 +18,7 @@ class User(db.Model, UserMixin):
     phone = db.Column(db.String(20), nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False)
     password = db.Column(db.String(60), nullable=False)
+    prepaid = db.Column(db.String(1), nullable=False, default='0')
 
     def get_reset_token(self):
         s = Serializer(app.secret_key)

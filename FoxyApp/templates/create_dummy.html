@@ -110,6 +110,10 @@
                 {{ form.route(class="form-control form-control-lg", style="font-family: Arial, Helvetica, sans-serif;") }}
                 {% endif %}
             </div>
+            <div class="form-check mt-2 mb-2" style="font-size:1em; text-align:left;">
+                {{ form.prepaid(class="form-check-input", checked=False) }}
+                {{ form.prepaid.label(class="form-check-label") }}
+            </div>
         </fieldset>
         <div class="form-group">
             {{ form.submit(class="btn btn-primary btn-lg") }}
