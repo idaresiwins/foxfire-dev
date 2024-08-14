@@ -244,11 +244,16 @@ def register():
         #db.session.commit()
         #user = User.query.filter_by(email=form.email.data).first()
         #send_reset_email(user)
-        flash(f"An account request has been submitted for {form.name.data}. Once approved, a email will be sent to you to complete sign up", 'success')
-        return redirect(url_for('home'))
+        #flash(f"An account request has been submitted for {form.name.data}. Once approved, a email will be sent to you to complete sign up", 'success')
+        return redirect(url_for('registration_successful'))
 
     else:
         return render_template(url_for("register"), title="Register", form=form)
+
+
+@app.route('/registration_successful.html', methods=["POST", "GET"])
+def registration_successful():
+    return render_template(url_for("registration_successful"))
 
 
 @app.route('/create_dummy', methods=["POST", "GET"])
@@ -463,14 +468,16 @@ def ordering(user_id):
         # Charge 20% less for items picked up at the farm, or add a $7 fee for delivery
         if purch["fulfill_location"] == "farm":
             cost = cost * 0.80
+            cost = round(cost * 2) / 2
         elif purch["fulfill_location"] == "home":
             # calc_address = user.address + " " + user.city + " " + user.state + " " + user.zipcode
             delivery_charge = 7 #int(get_milage(calc_address, api_key)) * 2
             # if delivery_charge < 5:
             #    delivery_charge = 5
             cost = cost + delivery_charge
+
         # round float to currency format.
-        total = str(round(cost, 2))
+        total = str(f"{cost:.2f}")
 
         # create a PDF invoice, and send an email to the customer.
         receipt = items.replace(",", "\n")
@@ -479,11 +486,11 @@ def ordering(user_id):
         label(user, receipt, pickup, total, dt, comment)
 
         #build the order
-        order += pickup + "," + str(round(cost, 2)) + "," + f"{comment}" + "," + f"{items_all}"
+        order += pickup + "," + total + "," + f"{comment}" + "," + f"{items_all}"
         order = order.split(",")
 
         #order minus empty columns for easy printing.
-        order2 += pickup + "," + str(round(cost, 2)) + "," + f"{comment}" + "," + f"{items}"
+        order2 += pickup + "," + total + "," + f"{comment}" + "," + f"{items}"
         order2 = order2.split(",")
         # "orders" looks like ['Leaks: 25', 'Pickles: 100', 'Customer total is 248.75']
         # Make API call to the google sheet to post the new order.
@@ -493,12 +500,12 @@ def ordering(user_id):
         # Flash cost totals
         if current_user.email in admins:
             flash(
-                f"{user.name}'s total will be ${str(round(cost, 2))}.",
+                f"{user.name}'s total will be ${total}",
                 "info")
             return redirect(url_for('account_info'))
         else:
             flash(
-                f"Thanks for shopping with us. You will receive an email with your invoice shortly. Your total will be ${str(round(cost, 2))}. We will see you soon!",
+                f"Thanks for shopping with us. You will receive an email with your invoice shortly. Your total will be ${total}. We will see you soon!",
                 "info")
             return redirect(url_for("home"))
 
