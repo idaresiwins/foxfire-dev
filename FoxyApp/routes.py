@@ -338,7 +338,7 @@ def edit_account(user_id):
             user.email = form.email.data
             db.session.commit()
             flash("Your account has been updated.", 'success')
-            return redirect(url_for("admin"))
+            return redirect(url_for("account_info", _anchor=f"user-{user.id}"))
 
         elif request.method == "GET":
             form.name.data = user.name
@@ -428,13 +428,15 @@ def ordering(user_id):
         comment = comment.replace(",", ";") #make sure customers comments with commas are replaced with semicolons
         locations = {"home": f"{fulfilment_address}",
                      "farm": f"Farm",                          #: 2107 South Fork Ridge Rd; Liberty KY 42539",
-                     "boyle": f"Boyle",           #: 105 East Walnut; Danville KY 40422",
+                     "morley": f"Morley's",
+                     "boyle": f"Boyle",#: 105 East Walnut; Danville KY 40422",
                      "danville2": f"NC",         #: 802 South 4th Street; Danville KY 40422",
                      "somerset": f"Nature's Best",             #: 1340 S Highway 27 Ste B; Somerset 42501",
                      "somerset2": f"Selenas"}                  #: 217 HWY 1248; Somerset KY"}
         address   = {"home": f"{fulfilment_address}",
                      "farm": f"Farm: 2107 South Fork Ridge Rd; Liberty KY 42539",
                      "boyle": f"Boyle County Farmers Market",
+                     "morley": f"Morley's Winter Market",
                      "danville2": f"Nutrition Center: 802 South 4th Street; Danville KY 40422",
                      "somerset": f"Nature's Best: 1340 S Highway 27 Ste B; Somerset 42501",
                      "somerset2": f"Selenas: 217 HWY 1248; Somerset KY"}
