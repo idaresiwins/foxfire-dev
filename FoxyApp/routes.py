@@ -13,6 +13,10 @@ import os
 from PIL import Image, ImageOps
 from datetime import datetime
 
+#  todo add option for weight of a item in order, and sort items by their weight on the label
+#  todo allow aaron to add remove and edit delivery locations
+#  todo make items available for admins, whether customers can place orders or not. This cannot affect the google sheet. 
+
 @app.route("/admin", methods=["POST", "GET"])
 @login_required
 def admin():
@@ -278,7 +282,7 @@ def create_dummy():
             db.session.add(newUser)
             db.session.commit()
             flash(f"An account request has been created for {form.name.data}.", 'success')
-            return render_template("create_dummy.html", title="Create Account", form=form)
+            return redirect(url_for("account_info"))
 
         else:
             return render_template("create_dummy.html", title="Create Account", form=form)
@@ -429,6 +433,7 @@ def ordering(user_id):
         locations = {"home": f"{fulfilment_address}",
                      "farm": f"Farm",                          #: 2107 South Fork Ridge Rd; Liberty KY 42539",
                      "morley": f"Morley's",
+                     "BBA": f"BBA",
                      "boyle": f"Boyle",#: 105 East Walnut; Danville KY 40422",
                      "danville2": f"NC",         #: 802 South 4th Street; Danville KY 40422",
                      "somerset": f"Nature's Best",             #: 1340 S Highway 27 Ste B; Somerset 42501",
@@ -437,6 +442,7 @@ def ordering(user_id):
                      "farm": f"Farm: 2107 South Fork Ridge Rd; Liberty KY 42539",
                      "boyle": f"Boyle County Farmers Market",
                      "morley": f"Morley's Winter Market",
+                     "BBA": f"Bakers Bleating Acres",
                      "danville2": f"Nutrition Center: 802 South 4th Street; Danville KY 40422",
                      "somerset": f"Nature's Best: 1340 S Highway 27 Ste B; Somerset 42501",
                      "somerset2": f"Selenas: 217 HWY 1248; Somerset KY"}
