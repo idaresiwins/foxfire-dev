@@ -2,7 +2,7 @@ from flask_wtf import FlaskForm
 from flask_wtf.file import FileField, FileAllowed
 from flask_login import current_user
 from FoxyApp.models import User, Product
-from wtforms import StringField, PasswordField, SubmitField, BooleanField, EmailField, FloatField, TextAreaField, RadioField
+from wtforms import StringField, PasswordField, SubmitField, BooleanField, EmailField, IntegerField, TextAreaField, RadioField
 from wtforms.validators import DataRequired, Length, Email, EqualTo, ValidationError
 
 
@@ -79,6 +79,7 @@ class NewProductForm(FlaskForm):
     veg_price = StringField("Product Price", validators=[DataRequired()])
     veg_image = FileField("Product Image", validators=[FileAllowed(["jpg", "png"])])
     veg_url = StringField("Product URL")
+    veg_weight = IntegerField("Weight (Whole numbers only.)")
     veg_sale = BooleanField("Post for sale immediately?")
     veg_dlt = BooleanField("Delete product permanently?")
     submit = SubmitField("Post!")

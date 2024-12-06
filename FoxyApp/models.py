@@ -45,9 +45,10 @@ class Product(db.Model):
     veg_image = db.Column(db.String(20), nullable=True, default="nia.png")
     veg_url = db.Column(db.String(20), nullable=True)
     veg_sale = db.Column(db.String(20), nullable=False)
+    veg_weight = db.Column(db.Integer, nullable=False, default=0)
 
     def __repr__(self):
-        return f"Product('{self.id}','{self.veg_name}', '{self.veg_price}', '{self.veg_image}',  '{self.veg_url}',  '{self.veg_sale}')"
+        return f"Product('{self.id}','{self.veg_name}', '{self.veg_price}', '{self.veg_image}',  '{self.veg_url}',  '{self.veg_sale}',  '{self.veg_weight}')"
 
 
 class Post(db.Model):

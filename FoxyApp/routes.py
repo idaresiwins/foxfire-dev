@@ -13,7 +13,7 @@ import os
 from PIL import Image, ImageOps
 from datetime import datetime
 
-#  todo add option for weight of a item in order, and sort items by their weight on the label
+#  add option for weight of a item in order, and sort items by their weight on the label
 #  todo allow aaron to add remove and edit delivery locations
 #  todo make items available for admins, whether customers can place orders or not. This cannot affect the google sheet. 
 
@@ -86,11 +86,19 @@ def new_product():
         if form.validate_on_submit():
             if form.veg_image.data:
                 picture = sav_thumbnail(form.veg_image.data)
-                veggie = Product(veg_image=picture, veg_name=form.veg_name.data, veg_price=form.veg_price.data,
-                                 veg_url=form.veg_url.data, veg_sale=form.veg_sale.data)
+                veggie = Product(veg_image=picture,
+                                 veg_name=form.veg_name.data,
+                                 veg_price=form.veg_price.data,
+                                 veg_url=form.veg_url.data,
+                                 veg_wieght=form.veg_wieght.data,
+                                 veg_sale=form.veg_sale.data)
             else:
-                veggie = Product(veg_image=form.veg_image.data, veg_name=form.veg_name.data,
-                                 veg_price=form.veg_price.data, veg_url=form.veg_url.data, veg_sale=form.veg_sale.data)
+                veggie = Product(veg_image=form.veg_image.data,
+                                 veg_name=form.veg_name.data,
+                                 veg_price=form.veg_price.data,
+                                 veg_url=form.veg_url.data,
+                                 veg_wieght=form.veg_wieght.data,
+                                 veg_sale=form.veg_sale.data)
             db.session.add(veggie)
             db.session.commit()
 
@@ -155,6 +163,7 @@ def edit_products(veg_id):
             prods.veg_name = form.veg_name.data
             prods.veg_price = form.veg_price.data
             prods.veg_url = form.veg_url.data
+            prods.veg_weight = form.veg_weight.data
             if form.veg_image.data and not None:
                 picture = sav_thumbnail(form.veg_image.data)
                 prods.veg_image = picture
@@ -182,6 +191,7 @@ def edit_products(veg_id):
             form.veg_name.data = prods.veg_name
             form.veg_price.data = prods.veg_price
             form.veg_url.data = prods.veg_url
+            form.veg_weight.data = prods.veg_weight
             form.veg_image.data = prods.veg_image
             #  form.veg_sale.data = prods.veg_sale   this resulted in the checkbox being checked no matter the value.
             #  Resorted to IF statement in the template with checked=True/False for each condition.
@@ -407,7 +417,7 @@ def ordering(user_id):
         flash("Do not do that!", "danger")
         return render_template('home.html')
     prods = Product.query.order_by(Product.veg_name).filter_by(veg_sale=True)
-    prods2 = Product.query.order_by(Product.veg_name)
+    prods2 = Product.query.order_by(Product.veg_weight).filter_by(veg_sale=True)
     user = User.query.filter_by(id=user_id).first()
     if user.prepaid == "1":
         user.name = user.name + "(P)"
@@ -417,6 +427,7 @@ def ordering(user_id):
 
         #declare variables
         purch = request.form
+        print(purch)
         dt = datetime.now().strftime('-%y%m%d%H%M%S%f')
         order = f"{user.name},"
         order2 = f"{user.name},"
@@ -454,12 +465,12 @@ def ordering(user_id):
         # Items_All is for the spreadsheet so the columns stay ordered, Item is for the email so customers dont/
         # get a ton of items like "Lettuce: 0" in the email.
 
-        # todo Why cant I just use 'prods'? when would a product that is not for sale be found in an order?
-        # todo we might need to go back to prods2. I want to see if this breaks anything. if we do that,
-        #    we need to remove the filters in the add, delete, and edit products routes
+        # Why cant I just use 'prods'? when would a product that is not for sale be found in an order?
+        # we might need to go back to prods2. I want to see if this breaks anything. if we do that,
+        # we need to remove the filters in the add, delete, and edit products routes
 
         for key in prods:
-            for i in purch:# add ordered items to list
+            for i in purch:  # add ordered items to list
                 if key.veg_name == i and not purch[i] == '' and not i == 'fulfill_location':  # find number of items 'purch[i]' and multiply by price 'key[0]'
                     if purch[i].isdigit():
                         cst = float(purch[i]) * float(key.veg_price)
@@ -491,7 +502,19 @@ def ordering(user_id):
         receipt = items.replace(",", "\n")
         createInvoice(user, receipt, pickup_address, total, dt, comment)
         send_receipt_email(user, receipt, pickup_address, total, dt, comment)
-        label(user, receipt, pickup, total, dt, comment)
+
+        # Create a sorted version of items for the label
+        items_list = [
+            (key.veg_name, int(purch[key.veg_name]))
+            for key in prods2 if key.veg_name in purch and purch[key.veg_name].isdigit()]
+        # Sort items by veg_weight using prods2 ordering
+        items_sorted = sorted(items_list, key=lambda x: next(
+            (p.veg_weight for p in prods2 if p.veg_name == x[0]), 0))
+        # Format sorted items for receipt
+        sorted_receipt = "\n".join([f"{qty} {name}" for name, qty in items_sorted])
+        # Pass sorted receipt to label
+        label(user, sorted_receipt, pickup, total, dt, comment)
+
 
         #build the order
         order += pickup + "," + total + "," + f"{comment}" + "," + f"{items_all}"
