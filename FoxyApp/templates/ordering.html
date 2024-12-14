@@ -31,23 +31,13 @@
     <div class="row" style="float: left;">
         <p>Where would you prefer to fulfill your order?</p>
         <div class="form-check">
-            <input class="form-check-input" type="radio" name="fulfill_location" id="home" value="home" checked>Deliver to my home address for $7 (subject to pre-approval.)</input>
+            <input class="form-check-input" type="radio" name="fulfill_location" id="home" value="{{user.address}}" checked>Deliver to my home address for $7 (subject to pre-approval.)</input>
         </div>
+        {% for loc in location %}
         <div class="form-check">
-            <input class="form-check-input" type="radio" name="fulfill_location" id="farm" value="farm" checked>Pickup at Foxfire Farm (~20% discount!)</input>
+            <input class="form-check-input" type="radio" name="fulfill_location" id="{{loc.id}}" value="{{loc.id}}" checked>{{loc.description}}</input>
         </div>
-        <div class="form-check">
-            <input class="form-check-input" type="radio" name="fulfill_location" id="flexRadioDefault5" value="danville2">Pickup at the Danville Nutrition Center (Fridays only)</input>
-        </div>
-        <!--<div class="form-check">
-            <input class="form-check-input" type="radio" name="fulfill_location" id="boyle" value="boyle">Pickup at the Boyle County Farmers Market</input>
-        </div>-->
-        <!--<div class="form-check">
-            <input class="form-check-input" type="radio" name="fulfill_location" id="morley" value="morley">Pickup Saturday at Morley's Winter Market</input>
-        </div>-->
-        <div class="form-check">
-            <input class="form-check-input" type="radio" name="fulfill_location" id="BBA" value="BBA">Pickup at Bakers Bleating Acres Friday or Saturday</input>
-        </div>
+        {% endfor %}
 	    <p>Comments <input type="text" name="order_comment" /></p>
         <p><input type="button" value="Submit Order" class="btn btn-primary btn-lg" data-bs-toggle="modal" data-bs-target="#exampleModal"/></p>
 

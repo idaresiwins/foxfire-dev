@@ -1,7 +1,7 @@
 from flask_wtf import FlaskForm
 from flask_wtf.file import FileField, FileAllowed
 from flask_login import current_user
-from FoxyApp.models import User, Product
+from FoxyApp.models import User
 from wtforms import StringField, PasswordField, SubmitField, BooleanField, EmailField, IntegerField, TextAreaField, RadioField
 from wtforms.validators import DataRequired, Length, Email, EqualTo, ValidationError
 
@@ -107,6 +107,14 @@ class PostForm(FlaskForm):
     submit = SubmitField('Post')
     visible = BooleanField("Make post visible in Blog?")
     dlt = BooleanField("Delete post permanently?")
+
+
+class LocationForm(FlaskForm):
+    short_name = StringField('Short Name (This is what will show up on the label)', validators=[DataRequired()])
+    long_name = StringField('Long Name (This is what the client will get)', validators=[DataRequired()])
+    description = StringField('Description (This is what will show on the website)', validators=[DataRequired()])
+    submit = SubmitField('Submit')
+    active = BooleanField("Is this pickup site active?")
 
 
 class NewPictureForm(FlaskForm):

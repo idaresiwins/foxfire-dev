@@ -75,7 +75,15 @@ class Picture(db.Model):
 class Toggle(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(20))
-    set_toggle =  db.Column(db.Integer)
+    set_toggle = db.Column(db.Integer)
 
     def __repr__(self):
         return f"Picture('{self.id}','{self.name}', '{self.set_toggle}')"
+
+
+class Location(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    short_name = db.Column(db.String(200))
+    long_name = db.Column(db.String(200))
+    description = db.Column(db.String(200))
+    active = db.Column(db.Boolean, default=False)

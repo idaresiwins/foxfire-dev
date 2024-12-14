@@ -2,8 +2,9 @@ from flask import render_template, redirect, request, url_for, flash, send_file
 from flask_login import login_user, current_user, logout_user, login_required
 from flask_mail import Message
 from FoxyApp import app, bcrypt, db, mail, admins, api_key
-from FoxyApp.forms import RegistrationForm, LoginForm, AccountForm, EditAccountForm, NewProductForm, RequestResetForm, ResetPasswordForm, PostForm, NewPictureForm, ToggleForm, CycleForm
-from FoxyApp.models import User, Product, Post, Picture, Toggle
+from FoxyApp.forms import RegistrationForm, LoginForm, AccountForm, EditAccountForm, NewProductForm, RequestResetForm, \
+    ResetPasswordForm, PostForm, NewPictureForm, ToggleForm, CycleForm, LocationForm
+from FoxyApp.models import User, Product, Post, Picture, Toggle, Location
 from FoxyApp.foxfiresheet import wks_order, wks_customer_details, wks_label, cycle, refresh_worksheet
 from FoxyApp.foxfirepdf import createInvoice, driver_sheet
 from FoxyApp.foxfiretok import get_account_token, approve_account_token
@@ -14,7 +15,7 @@ from PIL import Image, ImageOps
 from datetime import datetime
 
 #  add option for weight of a item in order, and sort items by their weight on the label
-#  todo allow aaron to add remove and edit delivery locations
+#  allow aaron to add remove and edit delivery locations
 #  todo make items available for admins, whether customers can place orders or not. This cannot affect the google sheet. 
 
 @app.route("/admin", methods=["POST", "GET"])
@@ -416,23 +417,26 @@ def ordering(user_id):
     else:
         flash("Do not do that!", "danger")
         return render_template('home.html')
+
     prods = Product.query.order_by(Product.veg_name).filter_by(veg_sale=True)
     prods2 = Product.query.order_by(Product.veg_weight).filter_by(veg_sale=True)
+    location = Location.query.filter_by(active=True)
     user = User.query.filter_by(id=user_id).first()
+
     if user.prepaid == "1":
         user.name = user.name + "(P)"
     toggle = Toggle.query.filter_by(id=1).first()
-    fulfilment_address = user.address
+
     if request.method == "POST":
 
         #declare variables
         purch = request.form
-        print(purch)
         dt = datetime.now().strftime('-%y%m%d%H%M%S%f')
         order = f"{user.name},"
         order2 = f"{user.name},"
         items_all = ""
         items = ""
+
 
         # mark orders made on behalf of customer with *
         if current_user.id != user_id:
@@ -441,24 +445,16 @@ def ordering(user_id):
         cost = 0
         comment = purch["order_comment"]
         comment = comment.replace(",", ";") #make sure customers comments with commas are replaced with semicolons
-        locations = {"home": f"{fulfilment_address}",
-                     "farm": f"Farm",                          #: 2107 South Fork Ridge Rd; Liberty KY 42539",
-                     "morley": f"Morley's",
-                     "BBA": f"BBA",
-                     "boyle": f"Boyle",#: 105 East Walnut; Danville KY 40422",
-                     "danville2": f"NC",         #: 802 South 4th Street; Danville KY 40422",
-                     "somerset": f"Nature's Best",             #: 1340 S Highway 27 Ste B; Somerset 42501",
-                     "somerset2": f"Selenas"}                  #: 217 HWY 1248; Somerset KY"}
-        address   = {"home": f"{fulfilment_address}",
-                     "farm": f"Farm: 2107 South Fork Ridge Rd; Liberty KY 42539",
-                     "boyle": f"Boyle County Farmers Market",
-                     "morley": f"Morley's Winter Market",
-                     "BBA": f"Bakers Bleating Acres",
-                     "danville2": f"Nutrition Center: 802 South 4th Street; Danville KY 40422",
-                     "somerset": f"Nature's Best: 1340 S Highway 27 Ste B; Somerset 42501",
-                     "somerset2": f"Selenas: 217 HWY 1248; Somerset KY"}
-        pickup = locations[purch['fulfill_location']]
-        pickup_address = address[purch['fulfill_location']]
+        if purch["fulfill_location"] == f"{user.address}":
+            pickup = user.address
+            pickup_address = user.address
+            cost = cost + 7
+        else:
+            location = Location.query.filter_by(id=purch["fulfill_location"]).first()
+            pickup = f'{location.short_name}'
+            pickup_address = f'{location.long_name}'
+
+
         #  purch looks like ImmutableMultiDict([('TurnipsHappy', '20'), ('cabbage', '5'), ('fulfill_location', 'farm'), ('order_comment', 'Testing faster submit on orders')])
 
         # Check items in order and append as needed, calculate cost for each item, and create two strings./
@@ -485,15 +481,9 @@ def ordering(user_id):
                 items_all += "0" + ","
 
         # Charge 20% less for items picked up at the farm, or add a $7 fee for delivery
-        if purch["fulfill_location"] == "farm":
+        if pickup == "farm":
             cost = cost * 0.80
             cost = round(cost * 2) / 2
-        elif purch["fulfill_location"] == "home":
-            # calc_address = user.address + " " + user.city + " " + user.state + " " + user.zipcode
-            delivery_charge = 7 #int(get_milage(calc_address, api_key)) * 2
-            # if delivery_charge < 5:
-            #    delivery_charge = 5
-            cost = cost + delivery_charge
 
         # round float to currency format.
         total = str(f"{cost:.2f}")
@@ -541,9 +531,58 @@ def ordering(user_id):
             return redirect(url_for("home"))
 
     elif toggle.set_toggle == 1:
-        return render_template("ordering.html", item_matrix=prods, admins=admins, user=user)
+        return render_template("ordering.html", item_matrix=prods, location=location, admins=admins, user=user)
     else:
-        return render_template("ordering.html", item_matrix=[], admins=admins, user=user)
+        return render_template("ordering.html", item_matrix=[], location=location, admins=admins, user=user)
+
+
+
+@app.route("/location", methods=['GET', 'POST'])
+@login_required
+def location():
+    if current_user.email in admins:
+        form = LocationForm()
+        location = Location.query.all()
+        if form.validate_on_submit():
+            loc = Location(short_name=form.short_name.data, long_name=form.long_name.data, desciption=form.description.data, active=form.active.data)
+            db.session.add(loc)
+            db.session.commit()
+            flash('Your location has been created!', 'success')
+            return redirect(url_for("location"))
+        return render_template('location.html', title='Locations',form=form, legend='Locations', location=location)
+
+
+@app.route("/edit_location/<int:id>", methods=['GET', 'POST'])
+@login_required
+def edit_location(id):
+    if current_user.email in admins:
+        form = LocationForm()
+        location = Location.query.filter_by(id=id).first()
+        if form.validate_on_submit():
+            location.short_name = form.short_name.data
+            location.long_name = form.long_name.data
+            location.description = form.description.data
+            location.active = form.active.data
+            db.session.commit()
+            flash('Your location has been updated!', 'success')
+            return redirect(url_for("location"))
+        elif request.method == 'GET':
+            form.short_name.data = location.short_name
+            form.long_name.data = location.long_name
+            form.description.data = location.description
+            form.active.data = location.active
+        return render_template('edit_location.html', title='Edit Location',form=form, legend='Edit Location', location=location)
+
+
+
+@app.route("/location/<int:id>/delete", methods=['GET', 'POST'])
+@login_required
+def delete_location(id):
+    if current_user.email in admins:
+        location = Location.query.filter_by(id=id).first()
+        db.session.delete(location)
+        db.session.commit()
+        return redirect(url_for("location"))
 
 
 @app.route("/post/new", methods=['GET', 'POST'])
