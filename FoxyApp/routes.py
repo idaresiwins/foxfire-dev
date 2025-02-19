@@ -15,9 +15,9 @@ import logging
 from PIL import Image, ImageOps
 from datetime import datetime
 
-#  add option for weight of a item in order, and sort items by their weight on the label
-#  allow aaron to add remove and edit delivery locations
-#  todo make items available for admins, whether customers can place orders or not. This cannot affect the google sheet. 
+#  todo make items available for admins, whether customers can place orders or not. This cannot affect the google sheet.
+#  todo make number of items on the label more visible
+#  todo add item volume to items, calculate volume of box needed
 
 @app.route("/admin", methods=["POST", "GET"])
 @login_required
@@ -92,14 +92,16 @@ def new_product():
                                  veg_name=form.veg_name.data,
                                  veg_price=form.veg_price.data,
                                  veg_url=form.veg_url.data,
-                                 veg_wieght=form.veg_wieght.data,
+                                 veg_weight=form.veg_weight.data,
+                                 veg_vol=form.veg_vol.data,
                                  veg_sale=form.veg_sale.data)
             else:
                 veggie = Product(veg_image=form.veg_image.data,
                                  veg_name=form.veg_name.data,
                                  veg_price=form.veg_price.data,
                                  veg_url=form.veg_url.data,
-                                 veg_wieght=form.veg_wieght.data,
+                                 veg_weight=form.veg_weight.data,
+                                 veg_vol=form.veg_vol.data,
                                  veg_sale=form.veg_sale.data)
             db.session.add(veggie)
             db.session.commit()
@@ -166,6 +168,7 @@ def edit_products(veg_id):
             prods.veg_price = form.veg_price.data
             prods.veg_url = form.veg_url.data
             prods.veg_weight = form.veg_weight.data
+            prods.veg_vol = form.veg_vol.data
             if form.veg_image.data and not None:
                 picture = sav_thumbnail(form.veg_image.data)
                 prods.veg_image = picture
@@ -194,6 +197,7 @@ def edit_products(veg_id):
             form.veg_price.data = prods.veg_price
             form.veg_url.data = prods.veg_url
             form.veg_weight.data = prods.veg_weight
+            form.veg_vol.data = prods.veg_vol
             form.veg_image.data = prods.veg_image
             #  form.veg_sale.data = prods.veg_sale   this resulted in the checkbox being checked no matter the value.
             #  Resorted to IF statement in the template with checked=True/False for each condition.
@@ -408,7 +412,7 @@ Your total will be: ${total}
 #    mail.send(msg2)
 
 
-LOG_FILE="/var/www/foxfirefarmky.com/FoxfireApp/customer_order_log.txt"
+LOG_FILE="customer_order_log.txt" #/var/www/foxfirefarmky.com/FoxfireApp/
 logging.basicConfig(level=logging.WARNING, format='%(asctime)s - %(levelname)s - %(message)s',
     handlers=[
         logging.FileHandler(LOG_FILE),
@@ -455,6 +459,7 @@ def ordering(user_id):
                 order = f"*{user.name},"
                 order2 = f"*{user.name},"
             cost = 0
+            volume=0.0
             comment = purch["order_comment"]
             comment = comment.replace(",", ";") #make sure customers comments with commas are replaced with semicolons
             if purch["fulfill_location"] == f"{user.address}":
@@ -483,7 +488,9 @@ def ordering(user_id):
                     if key.veg_name == i and not purch[i] == '' and not i == 'fulfill_location':  # find number of items 'purch[i]' and multiply by price 'key[0]'
                         if purch[i].isdigit():
                             cst = float(purch[i]) * float(key.veg_price)
+                            vol = float(purch[i]) * float(key.veg_vol)
                             cost += cst
+                            volume += vol
                             items_all += f"{purch[i]}," #add only the number of items, this will be sent to the google sheet
                             items += f"{purch[i]} {i}," #Add the number of items and the name of the item for the customer receipt, and email.
                             logger.warning(f"Added item: {i}, quantity: {purch[i]}, cost: {cst}")
@@ -535,8 +542,11 @@ def ordering(user_id):
             # Pass sorted receipt to label
             try:
                 # Attempt to create a label
+
+                volume = round(volume * 10) / 10
+                volume = str(volume)
                 logger.warning("Generating label for user.")
-                label(user, sorted_receipt, pickup, total, dt, comment)
+                label(user, sorted_receipt, pickup, total, dt, comment, volume)
                 logger.warning("Label generated successfully.")
             except Exception as e:
                 logger.error(f"Failed to generate label for user {user.id}: {e}", exc_info=True)

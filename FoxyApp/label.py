@@ -2,7 +2,9 @@ from PIL import Image, ImageDraw, ImageFont
 from FoxyApp import app
 from FoxyApp.foxfireutility import friday
 import os
-def label(current_user, receipt, pickup, total, dt, comment):
+
+
+def label(current_user, receipt, pickup, total, dt, comment, volume):
     #  declare variables
     name = f"{current_user.name}"
     name = name.replace(" ", "_")
@@ -13,12 +15,14 @@ def label(current_user, receipt, pickup, total, dt, comment):
     comment = f"Comment: {comment}"
     balance = "Balance:$______"
     date = friday()
+    volume = f"Box Size: {volume}"
     filename = os.path.join(app.root_path, "static/labels", f"{name}{dt}.jpg")
     #  font sizes
     fnt = ImageFont.truetype('DejaVuSans.ttf', 25)
     name_font = ImageFont.truetype('DejaVuSans.ttf', 80)
     balance_font = ImageFont.truetype('DejaVuSans.ttf', 80)
     receipt_font = ImageFont.truetype('DejaVuSans.ttf', 30)
+    boxsize_font = ImageFont.truetype('DejaVuSans.ttf', 30)
     pickup_font = ImageFont.truetype('DejaVuSans.ttf', 60)
     date_font = ImageFont.truetype('DejaVuSans.ttf', 60)
     # create new image
@@ -32,6 +36,7 @@ def label(current_user, receipt, pickup, total, dt, comment):
     pickup_width, pickup_height = draw.textsize(pickup, font=pickup_font)
     comment_width, comment_height = draw.textsize(comment, font=fnt)
     receipt_width, receipt_height = draw.textsize(receipt, font=receipt_font)
+    boxsize_width, boxsize_height = draw.textsize(volume, font=boxsize_font)
     date_width, date_height = draw.textsize(receipt, font=receipt_font)
 
     #  add height of "Balance" line if customer is prepaid
@@ -59,6 +64,9 @@ def label(current_user, receipt, pickup, total, dt, comment):
 
     text_next_height = 10 + farm_height + name_height + balance_height + receipt_height + comment_height + pickup_height + 20
     draw.text((10, text_next_height), date, font=date_font, fill=(0, 0, 0))
+
+    text_next_height = 10 + farm_height + name_height + balance_height + receipt_height + comment_height + pickup_height + date_height + 20
+    draw.text((10, text_next_height), volume, font=boxsize_font, fill=(0, 0, 0))
 
     image.save(filename)
 
