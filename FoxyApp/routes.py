@@ -48,7 +48,7 @@ def admin():
             for item in lis:
                 prods.append(item.veg_name)
             cycle(prods)
-            folder_path = 'FoxyApp/static/labels'
+            folder_path = os.path.join(app.root_path, "static/labels")
             entries = os.listdir(folder_path)
             files = [entry for entry in entries if os.path.isfile(os.path.join(folder_path, entry))]
             for f in files:
@@ -56,7 +56,7 @@ def admin():
                 os.remove(label)
             return render_template("admin.html", form=form)
         else:
-            folder_path = 'FoxyApp/static/labels'
+            folder_path = os.path.join(app.root_path, "static/labels")
             entries = os.listdir(folder_path)
             files = [entry for entry in entries if os.path.isfile(os.path.join(folder_path, entry))]
             sorted_files = sorted(files, key=lambda x: os.path.getctime(os.path.join(folder_path, x)))
@@ -429,7 +429,7 @@ Your total will be: ${total}
 #    mail.send(msg2)
 
 
-LOG_FILE="customer_order_log.txt" #/var/www/foxfirefarmky.com/FoxfireApp/
+LOG_FILE=os.path.join(app.root_path, "customer_order_log.txt")
 logging.basicConfig(level=logging.WARNING, format='%(asctime)s - %(levelname)s - %(message)s',
     handlers=[
         logging.FileHandler(LOG_FILE),
