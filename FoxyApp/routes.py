@@ -31,6 +31,11 @@ from datetime import datetime
 #  todo make number of items on the label more visible
 # add item volume to items, calculate volume of box needed
 
+@app.route('/health')
+def health_check():
+    return "OK", 200
+
+
 @app.route("/admin", methods=["POST", "GET"])
 @login_required
 def admin():

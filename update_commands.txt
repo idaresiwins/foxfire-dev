@@ -1,0 +1,1 @@
+bash -c 'cat /dev/null > /var/www/dev.foxfirefarmky.com/FoxfireApp/update_commands.txt'
