@@ -16,15 +16,15 @@ from PIL import Image, ImageOps
 from datetime import datetime
 
 # todo Migrate orders to DB
-#   1. Duplicate all orders to database. Orders need to have a order name, user, cost, items, box size, address, date, prepaid, comments
-#   2. Orders page: Dropdown with orders by week-of, weeks orders are returned by name as a clickable link
-#   3. Orders page: For given week, number of orders, total income, number of boxes, number of each item, number of home deliveries
-#   4. Orders page: Table with all order fields, allows side-scrolling, all items in order in same cell with newline (ordered by weight), make printable
+#   1. Duplicate all orders to database. Orders need to have a order name, user, cost, items, box size, address, date, prepaid, comments.
+#   2. Orders page: Dropdown with orders by week-of, weeks orders are returned by name as a clickable link.
+#   3. Orders page: For given week, number of orders, total income, number of boxes, number of each item, number of home deliveries.
+#   4. Orders page: Table with all order fields, allows side-scrolling, all items in order in same cell with newline (ordered by weight), make printable.
 
-#  todo add balance to users (double orders, confirm order, shopping cart)
-#   1. auto deduct
-#   2. show customer their balance as they shop + debit if balance exceeded
-#   3. show admins outstanding prepaid total
+#  todo add balance to users (double orders, confirm order, shopping cart).
+#   1. auto deduct.
+#   2. show customer their balance as they shop + debit if balance exceeded.
+#   3. show admins outstanding prepaid total.
 ########################################################################################################################
 
 #  todo make items available for admins, whether customers can place orders or not. This cannot affect the google sheet.
