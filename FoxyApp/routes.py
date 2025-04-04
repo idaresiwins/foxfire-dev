@@ -90,7 +90,7 @@ def driver_form():
 @login_required
 def orderform(pdf):
     if current_user.email in admins:
-        path = f"/var/www/foxfirefarmky.com/orderforms/{pdf}"
+        path = f"orderforms/{pdf}"
         return send_file(path, as_attachment=True)
     else:
         flash("You are not authorized.", "danger")
