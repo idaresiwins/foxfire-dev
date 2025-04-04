@@ -49,6 +49,7 @@ def admin():
                 prods.append(item.veg_name)
             cycle(prods)
             folder_path = os.path.join(app.root_path, "static/labels")
+            print(folder_path)
             entries = os.listdir(folder_path)
             files = [entry for entry in entries if os.path.isfile(os.path.join(folder_path, entry))]
             for f in files:
