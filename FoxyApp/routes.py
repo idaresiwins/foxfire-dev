@@ -611,7 +611,7 @@ def location():
         form = LocationForm()
         location = Location.query.all()
         if form.validate_on_submit():
-            loc = Location(short_name=form.short_name.data, long_name=form.long_name.data, desciption=form.description.data, active=form.active.data)
+            loc = Location(short_name=form.short_name.data, long_name=form.long_name.data, description=form.description.data, active=form.active.data)
             db.session.add(loc)
             db.session.commit()
             flash('Your location has been created!', 'success')
