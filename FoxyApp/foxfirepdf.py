@@ -1,11 +1,12 @@
 from fpdf import FPDF
 from FoxyApp.foxfireutility import friday
+from FoxyApp import app
 import os
 def createInvoice(user, items, pickup, total, dt, comment):
     pdf = FPDF()
     pdf.add_page()
     pdf.set_font("Arial", size=10)
-    pdf.image("static/photos/sprouts.png", x=None, y=None, w=50, h=50, type='PNG', link='')
+    pdf.image(os.path.join(app.root_path, "static/photos/sprouts.png"), x=None, y=None, w=50, h=50, type='PNG', link='')
     pdf.cell(200, 10, txt=f'Invoice number: {user.id}{dt}',ln=1, align='C')
     pdf.cell(200, 10, txt='Customer Info:', ln=2, align='L')
     pdf.cell(200, 10, txt=f'Name: {user.name}', ln=3, align='L')
@@ -20,7 +21,7 @@ def createInvoice(user, items, pickup, total, dt, comment):
     pdf.cell(200, 10, txt=f'Comments:', ln=10, align='L')
     pdf.cell(200, 10, txt=f'{comment}', ln=11, align='L')
     pdf.cell(200, 10, txt=f'Customer total: ${total}', ln=12, align='L')
-    pdf.output(f"orderforms/{user.id}{dt}.pdf")
+    pdf.output(os.path.join(app.root_path, f"orderforms/{user.id}{dt}.pdf"))
 
 def driver_sheet(orders):
     # Sorting the orders by pickup location (index 1 of the sublists)
@@ -74,10 +75,10 @@ def driver_sheet(orders):
     pdf.cell(30, 10, f'${average_amount:.2f}', 1, ln=1)
 
     # Close previously opened PDF if exists
-    if os.path.exists('static/orders.pdf'):
-        os.remove('static/orders.pdf')
+    if os.path.exists(os.path.join(app.root_path, 'static/orders.pdf')):
+        os.remove(os.path.join(app.root_path, 'static/orders.pdf'))
 
     # Output the PDF to a file
-    pdf.output('static/orders.pdf', 'F')
+    pdf.output(os.path.join(app.root_path, 'static/orders.pdf'), 'F')
 
     print("PDF created successfully!")
