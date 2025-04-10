@@ -1,29 +1,26 @@
 {% extends "index.html" %}
 {% block content %}
 <div>
-    <div class="footer">
-        <p>Products</p>
+    <div>
+        <h2>Products</h2>
         <p>All products are certified organic, unless otherwise stated.</p>
         <p>Ordering is open from Monday morning until Wednesday at 6PM</p>
-        <p>Click the tiles for more information.</p>
+        <p>Click the images for more information.</p>
     </div>
-
-        <div class="grid-container">
-            {% for veggie in item_matrix %}
-            <div class="grid-item p-2" style="min-width: 300px; min-height: 250px;">
-                {% if veggie.veg_url %}<a href="{{ veggie.veg_url }}" target="_blank">
-                {% else %}
-                {% endif %}
-                <p>{{ veggie.veg_name }}</p>
-                {% if veggie.veg_image != 'nia.png'%}
-                <img src="/static/uploads/{{ veggie.veg_image }}" width="80" height="120">
-                {% else %}
-                <img src="/static/nia.png" width="120" height="120">
-                {% endif %}
-                <p>${{ veggie.veg_price }}</p></a>
-            </div>
-            {% endfor %}
+    <div class="row">
+        {% for veggie in item_matrix %}
+        <div class="col-md-4 mt-3 col-lg-2" style="min-width: 300px; min-height: 250px;">
+            {% if veggie.veg_url %}<a href="{{veggie.veg_url}}" target="_blank">
+            {% else %}
+            {% endif %}
+            {% if veggie.veg_image != 'nia.png' %}
+              <img src="/static/uploads/{{ veggie.veg_image }}"/>
+            {% else %}
+              <img src="{{url_for('static', filename='nia.png')}}"/>
+            {% endif %}</a>
+            <p>{{veggie.veg_name}} - ${{veggie.veg_price}}</p>
         </div>
-
+        {% endfor %}
+    </div>
 </div>
 {% endblock %}

@@ -1,10 +1,9 @@
 {% extends "admin_index.html" %}
 {% block content %}
 <div>
-    <div class="footer">
-        <p>Manage Products</p>
-        <p>Click the tiles to edit an item</p>
-    </div>
+    <h2>Manage Products</h2>
+    <p>Click the tiles to edit an item</p>
+</div>
     <form method="POST" action="" enctype="multipart/form-data">
         {{ form.hidden_tag() }}
         <fieldset class="form-group">
@@ -23,17 +22,18 @@
         </div>
     </form>
 
-        <div class="grid-container">
+        <div class="row">
             {% for veggie in item_matrix %}
-            <div class="grid-item p-2" style="min-width: 300px; min-height: 250px;">
+            <div class="col-md-4 mt-3 col-lg-2">
                 <a href="/product/{{ veggie.id }}">
-                <p>{{veggie.veg_name}}</p>
+
                 {% if veggie.veg_image != 'nia.png' %}
-                <img src="/static/uploads/{{veggie.veg_image}}" width="80" height="120">
+                <img src="/static/uploads/{{veggie.veg_image}}">
                 {% else %}
-                <img src="{{url_for('static', filename='nia.png')}}" width="120" height="120">
+                <img src="{{url_for('static', filename='nia.png')}}">
                 {% endif %}
-                <p>${{ veggie.veg_price }}</p></a>
+                <p>{{veggie.veg_name}} - ${{ veggie.veg_price }}</p>
+                </a>
                 {% if veggie.veg_sale == "1" %}
                 <img src="/static/photos/available.png">
                 {% else %}

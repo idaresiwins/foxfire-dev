@@ -3,6 +3,7 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_bcrypt import Bcrypt
 from flask_login import LoginManager
 from flask_mail import Mail
+from flask_migrate import Migrate
 import os
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get("FOX_SECRET_KEY")
@@ -17,8 +18,9 @@ admins = ['foxfire.farm.ky@gmail.com', 'josh@dinky.pw']
 api_key = os.environ.get("FOX_API_KEY")
 mail = Mail(app)
 db = SQLAlchemy(app)
+migrate = Migrate(app, db)
 bcrypt = Bcrypt(app)
 login_manager = LoginManager(app)
 login_manager.login_view = "login"
 
-from FoxyApp import routes
+from FoxyApp import routes, models

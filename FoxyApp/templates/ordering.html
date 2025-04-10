@@ -1,6 +1,6 @@
 {% extends "index.html" %}
 {% block content %}
-<div class="footer">Ordering</div>
+<h2>Ordering</h2>
 
 <p>Please place your order by Wednesday 6PM.</p>
 {% if not item_matrix[0] %}
@@ -11,20 +11,19 @@
 <h3 style="color:red">Placing order on behalf of {{ user.name }}</h3>
 {% endif %}
 <form id="orderForm" action="#" method="post">
-    <div class="grid-container">
+    <div class="row">
         {% for veggie in item_matrix %}
-        <div class="grid-item  p-2" style="min-width: 300px; min-height: 250px;">
+        <div class="col-md-4 mt-3 col-lg-2" style="min-width: 300px; min-height: 250px;">
             {% if veggie.veg_url %}<a href="{{veggie.veg_url}}" target="_blank">
             {% else %}
             {% endif %}
-            <p>{{veggie.veg_name}}</p>
             {% if veggie.veg_image != 'nia.png' %}
-              <img src="/static/uploads/{{ veggie.veg_image }}" width="80" height="120"/>
+              <img src="/static/uploads/{{ veggie.veg_image }}"/>
             {% else %}
-              <img src="{{url_for('static', filename='nia.png')}}" width="80" height="120"/>
+              <img src="{{url_for('static', filename='nia.png')}}"/>
             {% endif %}</a>
+            <p>{{veggie.veg_name}} - ${{veggie.veg_price}}</p>
             <p>Quantity <input type="text" name="{{ veggie.veg_name }}" /></p>
-            <p>${{veggie.veg_price}}</p>
         </div>
         {% endfor %}
     </div>
@@ -42,7 +41,6 @@
         <p><input type="button" value="Submit Order" class="btn btn-primary btn-lg" data-bs-toggle="modal" data-bs-target="#exampleModal"/></p>
 
         <!-- Modal -->
-
         <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
             <div class="modal-dialog">
                 <div class="modal-content">
@@ -60,6 +58,7 @@
                 </div>
             </div>
         </div>
+
     </div>
 </form>
 

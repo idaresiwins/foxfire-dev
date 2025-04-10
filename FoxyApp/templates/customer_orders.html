@@ -3,4 +3,133 @@
 {% block sidebar %}
 {% endblock %}
 
-{% block footer %}Thanks for shopping with us, and we will see you soon!{% endblock %}
+{% block content %}
+<div class="container">
+    <h2>Customer Orders</h2>
+
+    <!-- Week selection dropdown -->
+    <form method="GET" action="{{ url_for('admin_orders') }}">
+        <div class="form-group">
+            <label for="week">Select Week:</label>
+            <select name="week" id="week" class="form-control" onchange="this.form.submit()">
+                <option value="">All Orders</option>
+                {% for week in weeks %}
+                <option value="{{ week.start }}" {% if selected_week == week.start %}selected{% endif %}>
+                    {{ week.label }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+    </form>
+
+    <!-- Button to generate driver sheet for the selected week -->
+    {% if selected_week %}
+    <div class="mb-3">
+        <a href="{{ url_for('driver_form_week', week=selected_week) }}" target="_blank" class="btn btn-primary">
+            Generate Driver Sheet for {{ selected_week }}
+        </a>
+    </div>
+    {% endif %}
+
+    <!-- Order statistics -->
+    <div class="mb-3">
+        <h3>Statistics</h3>
+        <p>Number of Orders: {{ stats.num_orders }}</p>
+        <p>Total Income: ${{ stats.total_income }}</p>
+        <p>Total Large Boxes: {{ stats.total_large_boxes }}</p>
+        <p>Total Small Boxes: {{ stats.total_small_boxes }}</p>
+        <p>Home Deliveries: {{ stats.home_deliveries }}</p>
+        <!-- Item count block -->
+        <div id="item-count-section">
+            <p><strong>Item Counts:</strong></p>
+            <ul>
+                {% for item, count in stats.item_counts.items() %}
+                <li>{{ item }}: {{ count }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+        <!-- Print Buttons -->
+        <button onclick="printItemCounts()" class="btn btn-secondary">Print Item Count</button>
+    </div>
+
+    <!-- Orders table -->
+    <div class="table-responsive">
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Customer</th>
+                    <th>Cost</th>
+                    <th>Items</th>
+                    <th>Large Boxes</th>
+                    <th>Small Boxes</th>
+                    <th>Address</th>
+                    <th>Date</th>
+                    <th>Prepaid</th>
+                    <th>Comments</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for order in orders %}
+                <tr>
+                    <td>{{ order.user_name }}</td>
+                    <td>${{ order.cost }}</td>
+                    <td>{{ order["items"] | replace('\n', '<br>') | safe }}</td>
+                    <td>{{ order.large_boxes }}</td>
+                    <td>{{ order.small_boxes }}</td>
+                    <td>{{ order.address }}</td>
+                    <td>{{ order.date }}</td>
+                    <td>{{ 'Yes' if order.prepaid else 'No' }}</td>
+                    <td>{{ order.comments }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Export orders button -->
+    <div class="mb-3">
+        <a href="{{ url_for('export_orders', week=selected_week) }}" class="btn btn-secondary">
+            Export Orders to CSV
+        </a>
+    </div>
+</div>
+
+
+<style>
+@media print {
+    .navbar, .btn, form, .mb-4 {
+        display: none !important;
+    }
+    table {
+        width: 100%;
+        font-size: 12px;
+    }
+    th, td {
+        border: 1px solid black !important;
+        padding: 5px;
+    }
+}
+</style>
+
+<script>
+function printItemCounts() {
+    const content = document.getElementById("item-count-section").innerHTML;
+    const printWindow = window.open('', '', 'height=600,width=800');
+    printWindow.document.write('<html><head><title>Item Counts</title>');
+    printWindow.document.write('<style>body { font-family: Arial, sans-serif; font-size: 14px; }</style>');
+    printWindow.document.write('</head><body>');
+    printWindow.document.write('<h3>Item Counts</h3>');
+    printWindow.document.write(content);
+    printWindow.document.write('</body></html>');
+    printWindow.document.close();
+    printWindow.focus();
+    printWindow.print();
+    printWindow.close();
+}
+</script>
+
+{% endblock %}
+
+{% block footer %}
+Thanks for shopping with us, and we will see you soon!
+{% endblock %}

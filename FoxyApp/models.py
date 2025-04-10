@@ -7,7 +7,7 @@ from datetime import datetime
 def load_user(user_id):
     return User.query.get(int(user_id))
 
-
+# Existing User model (unchanged)
 class User(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(20), nullable=False)
@@ -19,6 +19,7 @@ class User(db.Model, UserMixin):
     email = db.Column(db.String(120), unique=True, nullable=False)
     password = db.Column(db.String(60), nullable=False)
     prepaid = db.Column(db.String(1), nullable=False, default='0')
+    orders = db.relationship('Order', backref='customer', lazy=True)
 
     def get_reset_token(self):
         s = Serializer(app.secret_key)
@@ -29,15 +30,14 @@ class User(db.Model, UserMixin):
         s = Serializer(app.secret_key)
         try:
             user_id = s.loads(token, max_age=86400)['user_id']
-            print(user_id)
         except:
             return None
         return User.query.get(user_id)
 
     def __repr__(self):
-        return f"User('{self.id}','{self.name}', '{self.address}', '{self.city}', '{self.state}', '{self.zipcode}', '{self.phone}', '{self.email}', '{self.password}')"
+        return f"User('{self.id}', '{self.name}', '{self.email}')"
 
-
+# Updated Product model (optional inventory support)
 class Product(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     veg_name = db.Column(db.String(20), nullable=False)
@@ -47,10 +47,35 @@ class Product(db.Model):
     veg_sale = db.Column(db.String(20), nullable=False)
     veg_weight = db.Column(db.Integer, nullable=False, default=0)
     veg_vol = db.Column(db.Float, nullable=False, default=0.0)
+    order_items = db.relationship('OrderItem', backref='product', lazy=True)
 
     def __repr__(self):
-        return f"Product('{self.id}','{self.veg_name}', '{self.veg_price}', '{self.veg_image}',  '{self.veg_url}',  '{self.veg_sale}',  '{self.veg_weight}', '{self.veg_vol}')"
+        return f"Product('{self.id}', '{self.veg_name}', '{self.veg_price}')"
 
+# New Order model
+class Order(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    order_date = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+    pickup_location = db.Column(db.String(200), nullable=False)
+    total_cost = db.Column(db.Float, nullable=False)
+    volume = db.Column(db.Float, nullable=False)
+    comment = db.Column(db.Text, nullable=True)
+    items = db.relationship('OrderItem', backref='order', lazy=True)
+
+    def __repr__(self):
+        return f"Order('{self.id}', '{self.user_id}', '{self.order_date}', '{self.total_cost}')"
+
+# New OrderItem model
+class OrderItem(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    order_id = db.Column(db.Integer, db.ForeignKey('order.id'), nullable=False)
+    product_id = db.Column(db.Integer, db.ForeignKey('product.id'), nullable=False)
+    quantity = db.Column(db.Integer, nullable=False)
+    price_at_time = db.Column(db.Float, nullable=False)  # Store price at order time to handle price changes
+
+    def __repr__(self):
+        return f"OrderItem('{self.id}', '{self.product_id}', '{self.quantity}')"
 
 class Post(db.Model):
     id = db.Column(db.Integer, primary_key=True)

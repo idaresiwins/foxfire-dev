@@ -23,12 +23,13 @@ def createInvoice(user, items, pickup, total, dt, comment):
     pdf.cell(200, 10, txt=f'Customer total: ${total}', ln=12, align='L')
     pdf.output(os.path.join(app.root_path, f"orderforms/{user.id}{dt}.pdf"))
 
-def driver_sheet(orders):
+def driver_sheet(orders, week=None):
     # Sorting the orders by pickup location (index 1 of the sublists)
     orders.sort(key=lambda x: x[1])
     # Calculate total and average
-    total_amount = sum(float(order[2]) for order in orders if order[0] != "Name")
-    average_amount = total_amount / len(orders) if orders else 0
+    total_amount = sum(float(order[2].replace('$', '')) for order in orders if order[0] != "Name")
+    num_orders = len([order for order in orders if order[0] != "Name"])  # Exclude header row
+    average_amount = total_amount / num_orders if num_orders else 0
     fri = friday()
     # Define class for PDF
     class PDF(FPDF):
@@ -66,7 +67,7 @@ def driver_sheet(orders):
     # Add total and average calculations to PDF
     pdf.set_font('Arial', 'B', 12)
     pdf.cell(90, 10, 'Total Orders', 1)
-    pdf.cell(30, 10, f'{len(orders)}', 1, ln=1)
+    pdf.cell(30, 10, f'{num_orders}', 1, ln=1)
 
     pdf.cell(90, 10, 'Total Amount', 1)
     pdf.cell(30, 10, f'${total_amount:.2f}', 1, ln=1)
@@ -74,11 +75,20 @@ def driver_sheet(orders):
     pdf.cell(90, 10, 'Average Order Cost', 1)
     pdf.cell(30, 10, f'${average_amount:.2f}', 1, ln=1)
 
+    # Determine the filename based on the week
+    if week:
+        filename = f"orders_{week}.pdf"
+    else:
+        filename = "orders.pdf"
+
     # Close previously opened PDF if exists
-    if os.path.exists(os.path.join(app.root_path, 'static/orders.pdf')):
-        os.remove(os.path.join(app.root_path, 'static/orders.pdf'))
+    if os.path.exists(os.path.join(app.root_path, 'static', filename)):
+        os.remove(os.path.join(app.root_path, 'static', filename))
 
     # Output the PDF to a file
-    pdf.output(os.path.join(app.root_path, 'static/orders.pdf'), 'F')
+    pdf.output(os.path.join(app.root_path, 'static', filename), 'F')
 
     print("PDF created successfully!")
+    return filename
+
+

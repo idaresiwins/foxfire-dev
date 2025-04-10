@@ -1,10 +1,10 @@
-from flask import render_template, redirect, request, url_for, flash, send_file
+from flask import render_template, redirect, request, url_for, flash, send_file, jsonify, Response
 from flask_login import login_user, current_user, logout_user, login_required
 from flask_mail import Message
 from FoxyApp import app, bcrypt, db, mail, admins, api_key
 from FoxyApp.forms import RegistrationForm, LoginForm, AccountForm, EditAccountForm, NewProductForm, RequestResetForm, \
     ResetPasswordForm, PostForm, NewPictureForm, ToggleForm, CycleForm, LocationForm
-from FoxyApp.models import User, Product, Post, Picture, Toggle, Location
+from FoxyApp.models import User, Product, Post, Picture, Toggle, Location, Order, OrderItem
 from FoxyApp.foxfiresheet import wks_order, wks_customer_details, wks_label, cycle, refresh_worksheet
 from FoxyApp.foxfirepdf import createInvoice, driver_sheet
 from FoxyApp.foxfiretok import get_account_token, approve_account_token
@@ -13,10 +13,14 @@ import secrets
 import os
 import logging
 from PIL import Image, ImageOps
-from datetime import datetime
+from datetime import datetime, timedelta, time
+from sqlalchemy import func
+import csv
+from io import StringIO
 
-# todo Migrate orders to DB
-#   1. Duplicate all orders to database. Orders need to have a order name, user, cost, items, box size, address, date, prepaid, comments.
+
+#   Migrate orders to DB
+#   1. Orders page: need to have a order name, user, cost, items, box size, address, date, prepaid, comments.
 #   2. Orders page: Dropdown with orders by week-of, weeks orders are returned by name as a clickable link.
 #   3. Orders page: For given week, number of orders, total income, number of boxes, number of each item, number of home deliveries.
 #   4. Orders page: Table with all order fields, allows side-scrolling, all items in order in same cell with newline (ordered by weight), make printable.
@@ -49,7 +53,6 @@ def admin():
                 prods.append(item.veg_name)
             cycle(prods)
             folder_path = os.path.join(app.root_path, "static/labels")
-            print(folder_path)
             entries = os.listdir(folder_path)
             files = [entry for entry in entries if os.path.isfile(os.path.join(folder_path, entry))]
             for f in files:
@@ -64,6 +67,141 @@ def admin():
             return render_template("admin.html", form=form, labels=sorted_files)
     else:
         flash("You are not authorized.", "danger")
+        return redirect(url_for("home"))
+
+
+@app.route('/admin/orders', methods=['GET'])
+@login_required
+def admin_orders():
+    if current_user.email not in admins:
+        return redirect(url_for('home'))
+
+    selected_week = request.args.get('week', default=None)
+    today = datetime.utcnow()
+    current_monday = today - timedelta(days=today.weekday())
+
+    # Generate last 12 weeks
+    # Build list of weeks
+    weeks = []
+    for i in range(12):
+        week_start = current_monday - timedelta(weeks=i)
+        week_end = week_start + timedelta(days=6)
+        weeks.append({
+            'start': week_start.strftime('%Y-%m-%d'),
+            'label': f"{week_start.strftime('%d %b %Y')} - {week_end.strftime('%d %b %Y')}"
+        })
+
+    # Query orders
+    query = db.session.query(Order, User).join(User, Order.user_id == User.id)
+
+    if selected_week:
+        week_start = datetime.strptime(selected_week, '%Y-%m-%d')
+        week_end = datetime.combine(week_start + timedelta(days=6), time.max)
+        query = query.filter(Order.order_date.between(week_start, week_end))
+
+    orders = query.order_by(Order.order_date.desc()).all()
+
+    # Cache locations for pickup checks
+    valid_locations = [loc.short_name for loc in Location.query.all()]
+
+    # Aggregate data
+    order_data = []
+    total_income = 0
+    total_large_boxes = 0
+    total_small_boxes = 0
+    item_counts = {}
+    home_deliveries = 0
+
+    for order, user in orders:
+        items = db.session.query(OrderItem, Product)\
+            .join(Product, OrderItem.product_id == Product.id)\
+            .filter(OrderItem.order_id == order.id)\
+            .order_by(Product.veg_weight.desc())\
+            .all()
+
+        items_str = "\n".join([
+            f"{item.OrderItem.quantity} x {item.Product.veg_name}"
+            for item in items
+        ])
+
+        box_size = sum(item.OrderItem.quantity * item.Product.veg_vol for item in items)
+        large_boxes = int(box_size)
+        decimal_part = box_size - large_boxes
+        small_boxes = 1 if 0 < decimal_part < 0.5 else 0
+        if decimal_part >= 0.5:
+            large_boxes += 1
+
+        total_large_boxes += large_boxes
+        total_small_boxes += small_boxes
+        total_income += order.total_cost
+
+        for item in items:
+            item_name = item.Product.veg_name
+            item_counts[item_name] = item_counts.get(item_name, 0) + item.OrderItem.quantity
+
+        if order.pickup_location not in valid_locations:
+            home_deliveries += 1
+
+        order_data.append({
+            'order_id': order.id,
+            'user_name': user.name,
+            'user_id': user.id,
+            'cost': round(order.total_cost, 2),
+            'items': items_str,
+            'large_boxes': large_boxes,
+            'small_boxes': small_boxes,
+            'address': order.pickup_location,
+            'date': order.order_date.strftime('%Y-%m-%d %H:%M'),
+            'prepaid': user.prepaid == '1',
+            'comments': order.comment or ''
+        })
+    print(order_data)
+    stats = {
+        'num_orders': len(order_data),
+        'total_income': round(total_income, 2),
+        'total_large_boxes': total_large_boxes,
+        'total_small_boxes': total_small_boxes,
+        'item_counts': item_counts,
+        'home_deliveries': home_deliveries
+    }
+
+    return render_template(
+        'customer_orders.html',
+        orders=order_data,
+        weeks=weeks,
+        selected_week=selected_week,
+        stats=stats
+    )
+
+
+@app.route('/admin/income-by-week')
+@login_required
+def income_by_week():
+    if current_user.email not in admins:
+        return redirect(url_for('home'))
+
+    today = datetime.utcnow()
+    current_monday = today - timedelta(days=today.weekday())
+    data = []
+
+    for i in range(12):
+        week_start = current_monday - timedelta(weeks=i)
+        week_end = week_start + timedelta(days=6, hours=23, minutes=59, seconds=59)
+
+        total = db.session.query(func.sum(Order.total_cost)).filter(
+            Order.order_date.between(week_start, week_end)
+        ).scalar() or 0
+
+        label = f"{week_start.strftime('%d %b')} - {week_end.strftime('%d %b')}"
+        data.append((label, round(total, 2)))
+
+    # Reverse to show oldest first
+    data.reverse()
+
+    return jsonify({
+        'labels': [label for label, _ in data],
+        'values': [value for _, value in data]
+    })
 
 
 @app.route("/static/labels/<label>/delete", methods=["POST", "GET"])
@@ -75,17 +213,44 @@ def labels(label):
     else:
         flash("You are not authorized.", "danger")
 
-@app.route("/driver_form", methods=["POST", "GET"])
+@app.route("/driver_form_week", methods=["GET"])
 @login_required
-def driver_form():
-    if current_user.email in admins:
-        orders = refresh_worksheet()
-        driver_sheet(orders)
-        path = "orders.pdf"
-        return redirect(url_for('static', filename=path))
-
-    else:
+def driver_form_week():
+    if current_user.email not in admins:
         flash("You are not authorized.", "danger")
+        return redirect(url_for("home"))
+
+    # Get the selected week from the query parameter
+    selected_week = request.args.get('week', default=None)
+    if not selected_week:
+        flash("Please select a week to generate the driver sheet.", "warning")
+        return redirect(url_for("admin_orders"))
+
+    # Query orders for the selected week
+    week_start = datetime.strptime(selected_week, '%Y-%m-%d')
+    week_end = datetime.combine(week_start + timedelta(days=6), time.max)
+    orders_query = db.session.query(Order, User).join(User, Order.user_id == User.id).filter(
+        Order.order_date.between(week_start, week_end)
+    ).all()
+
+    if not orders_query:
+        flash("No orders found for the selected week.", "warning")
+        return redirect(url_for("admin_orders"))
+
+    # Format the orders into the structure expected by driver_sheet
+    orders = [["Name", "Location", "Total", "Comments"]]  # Header row
+    for order, user in orders_query:
+        order_row = [
+            user.name,
+            order.pickup_location,
+            f"${order.total_cost:.2f}",
+            order.comment or ""
+        ]
+        orders.append(order_row)
+
+    # Generate the PDF using driver_sheet
+    filename = driver_sheet(orders, week=selected_week)
+    return redirect(url_for('static', filename=filename))
 
 @app.route("/orderform/<pdf>", methods=["POST", "GET"])
 @login_required
@@ -425,9 +590,7 @@ Your total will be: ${total}
     with app.open_resource(path) as fp:
         msg.attach(f"{user.id}{dt}.pdf", "text/pdf", fp.read())
     mail.send(msg)
-#    with app.open_resource(app.root_path, "orderforms", f"{user.id}{dt}.pdf") as fp:
-#        msg2.attach(f"{user.id}{dt}.pdf", "text/pdf", fp.read())
-#    mail.send(msg2)
+
 
 
 LOG_FILE=os.path.join(app.root_path, "customer_order_log.txt")
@@ -443,7 +606,7 @@ logger = logging.getLogger(__name__)
 @login_required
 def ordering(user_id):
     logger.warning(f"Accessing ordering page for user_id: {user_id}, current_user: {current_user.id}")
-    if current_user.email in admins:  # allow admins to place OOB orders
+    if current_user.email in admins:  # Allow admins to place OOB orders
         logger.warning("Admin user is placing an order.")
     elif current_user.id == user_id:  # Allow users to place order for themselves
         logger.warning("User is placing an order for themselves.")
@@ -452,157 +615,161 @@ def ordering(user_id):
         flash("Do not do that!", "danger")
         return render_template('home.html')
 
-    prods = Product.query.order_by(Product.veg_name).filter_by(veg_sale=True)
-    prods2 = Product.query.order_by(Product.veg_weight).filter_by(veg_sale=True)
-    location = Location.query.filter_by(active=True)
+    prods = Product.query.order_by(Product.veg_name).filter_by(veg_sale=True).all()
+    prods2 = Product.query.order_by(Product.veg_weight).filter_by(veg_sale=True).all()
+    location = Location.query.filter_by(active=True).all()
     user = User.query.filter_by(id=user_id).first()
 
     if user.prepaid == "1":
         user.name = user.name + "(P)"
     toggle = Toggle.query.filter_by(id=1).first()
+
     try:
         if request.method == "POST":
             logger.warning(f"Processing order for user: {user.name}")
-            #declare variables
             purch = request.form
             dt = datetime.now().strftime('-%y%m%d%H%M%S%f')
-            order = f"{user.name},"
-            order2 = f"{user.name},"
-            items_all = ""
-            items = ""
+            cost = 0.0
+            volume = 0.0
+            # Sanitize the comment: replace problematic characters and escape others
+            raw_comment = purch.get("order_comment", "")
+            # Replace problematic characters or escape them
+            comment = (
+                raw_comment
+                .replace(",", ";")  # Replace commas with semicolons
+                .replace("\n", " ")  # Replace newlines with spaces
+                .replace("\r", " ")  # Replace carriage returns with spaces
+                .replace('"', '\\"')  # Escape double quotes
+                .replace("'", "\\'")  # Escape single quotes
+                .strip()  # Remove leading/trailing whitespace
+            )
+            pickup = None
+            pickup_address = None
 
-
-            # mark orders made on behalf of customer with *
-            if current_user.id != user_id:
-                order = f"*{user.name},"
-                order2 = f"*{user.name},"
-            cost = 0
-            volume=0.0
-            comment = purch["order_comment"]
-            comment = comment.replace(",", ";") #make sure customers comments with commas are replaced with semicolons
-            if purch["fulfill_location"] == f"{user.address}":
+            # Determine pickup location and adjust cost
+            if purch["fulfill_location"] == user.address:
                 pickup = user.address
                 pickup_address = user.address
-                cost = cost + 7
+                cost += 7.0
             else:
-                location = Location.query.filter_by(id=purch["fulfill_location"]).first()
-                pickup = f'{location.short_name}'
-                pickup_address = f'{location.long_name}'
+                loc = Location.query.filter_by(id=int(purch["fulfill_location"])).first()
+                pickup = loc.short_name
+                pickup_address = loc.long_name
+
             logger.warning(f"Pickup location determined: {pickup_address}")
 
+            # Create the order
+            order = Order(
+                user_id=user_id,
+                pickup_location=pickup,
+                total_cost=0.0,  # Will update later
+                comment=comment,
+                volume=volume
+            )
+            db.session.add(order)
+            db.session.flush()  # Get order.id without committing yet
 
-            #  purch looks like ImmutableMultiDict([('TurnipsHappy', '20'), ('cabbage', '5'), ('fulfill_location', 'farm'), ('order_comment', 'Testing faster submit on orders')])
+            # Process ordered items
+            items = []
+            items_all = []
+            for product in prods:
+                if product.veg_name in purch and purch[product.veg_name] and purch[product.veg_name].isdigit():
+                    qty = int(purch[product.veg_name])
+                    if qty > 0:
+                        price = float(product.veg_price)
+                        item_cost = qty * price
+                        item_volume = qty * float(product.veg_vol)
+                        cost += item_cost
+                        volume += item_volume
 
-            # Check items in order and append as needed, calculate cost for each item, and create two strings./
-            # Items_All is for the spreadsheet so the columns stay ordered, Item is for the email so customers dont/
-            # get a ton of items like "Lettuce: 0" in the email.
+                        # Create OrderItem
+                        order_item = OrderItem(
+                            order_id=order.id,
+                            product_id=product.id,
+                            quantity=qty,
+                            price_at_time=price
+                        )
+                        db.session.add(order_item)
+                        items.append(f"{qty} {product.veg_name}")
+                        items_all.append(str(qty))
+                    else:
+                        items_all.append("0")
+                else:
+                    items_all.append("0")
 
-            # Why cant I just use 'prods'? when would a product that is not for sale be found in an order?
-            # we might need to go back to prods2. I want to see if this breaks anything. if we do that,
-            # we need to remove the filters in the add, delete, and edit products routes
+            #  record volume
+            volume = f"{round(volume * 10) / 10}"
+            order.volume = volume
 
-            for key in prods:
-                for i in purch:  # add ordered items to list
-                    if key.veg_name == i and not purch[i] == '' and not i == 'fulfill_location':  # find number of items 'purch[i]' and multiply by price 'key[0]'
-                        if purch[i].isdigit():
-                            cst = float(purch[i]) * float(key.veg_price)
-                            vol = float(purch[i]) * float(key.veg_vol)
-                            cost += cst
-                            volume += vol
-                            items_all += f"{purch[i]}," #add only the number of items, this will be sent to the google sheet
-                            items += f"{purch[i]} {i}," #Add the number of items and the name of the item for the customer receipt, and email.
-                            logger.warning(f"Added item: {i}, quantity: {purch[i]}, cost: {cst}")
-                        else:
-                            logger.error(f"Invalid quantity for item: {i}, value: {purch[i]}")
-                            flash("Only numbers may be used in the order form.", "danger")
-                            return redirect(url_for('ordering', item_matrix=prods, user_id=user_id))
-                        break  # do not keep comparing after a match is found
-                if key.veg_name != i and not i == 'fulfill_location':  # Set existing but unordered items in purchase to zero to maintain columns
-                    items_all += "0" + ","
+            # Adjust cost for farm pickup
+            if pickup == "FARM" or "farm":
+                cost *= 0.80
+            cost = round(cost * 2) / 2
+            order.total_cost = cost
+            db.session.commit()  # Commit the order and items
 
-            # Charge 20% less for items picked up at the farm, or add a $7 fee for delivery
-            if pickup == "FARM":
-                cost = cost * 0.80
-                cost = round(cost * 2) / 2
-
-            # round float to currency format.
-            total = str(f"{cost:.2f}")
+            total = f"{cost:.2f}"
             logger.warning(f"Order total calculated: {total}")
-            # create a PDF invoice, and send an email to the customer.
-            receipt = items.replace(",", "\n")
+
+            # Generate receipt and PDF
+            receipt = "\n".join(items)
             try:
-                # Attempt to create an invoice
                 logger.warning("Creating invoice for user.")
                 createInvoice(user, receipt, pickup_address, total, dt, comment)
                 logger.warning("Invoice created successfully.")
             except Exception as e:
-                logger.error(f"Failed to create invoice for user {user.id}: {e}", exc_info=True)
+                logger.error(f"Failed to create invoice: {e}", exc_info=True)
 
             try:
-                # Attempt to send an email receipt
                 logger.warning("Sending receipt email to user.")
                 send_receipt_email(user, receipt, pickup_address, total, dt, comment)
                 logger.warning("Email sent successfully.")
             except Exception as e:
-                logger.error(f"Failed to send email to user {user.id}: {e}", exc_info=True)
+                logger.error(f"Failed to send email: {e}", exc_info=True)
 
-
-
-            # Create a sorted version of items for the label
-            items_list = [
-                (key.veg_name, int(purch[key.veg_name]))
-                for key in prods2 if key.veg_name in purch and purch[key.veg_name].isdigit()]
-            # Sort items by veg_weight using prods2 ordering
+            # Generate sorted receipt for label
+            items_list = [(item.product.veg_name, item.quantity) for item in order.items]
             items_sorted = sorted(items_list, key=lambda x: next(
                 (p.veg_weight for p in prods2 if p.veg_name == x[0]), 0))
-            # Format sorted items for receipt
             sorted_receipt = "\n".join([f"{qty} {name}" for name, qty in items_sorted])
-            # Pass sorted receipt to label
-            try:
-                # Attempt to create a label
 
-                volume = round(volume * 10) / 10
-                volume = str(volume)
+            try:
+                volume = f"{round(volume * 10) / 10}"
+                order.volume = volume
                 logger.warning("Generating label for user.")
                 label(user, sorted_receipt, pickup, total, dt, comment, volume)
                 logger.warning("Label generated successfully.")
             except Exception as e:
-                logger.error(f"Failed to generate label for user {user.id}: {e}", exc_info=True)
+                logger.error(f"Failed to generate label: {e}", exc_info=True)
 
-            #build the order
-            order += pickup + "," + total + "," + f"{comment}" + "," + f"{items_all}"
-            order = order.split(",")
+            ## Optionally keep Google Sheets sync (remove if not needed)
+            #order_row = [user.name, pickup, total, comment] + items_all
+            #order_row2 = [user.name, pickup, total, comment] + items
+            #try:
+            #    wks_label.append_row(order_row2)
+            #    wks_order.append_row(order_row)
+            #except Exception as e:
+            #    logger.error(f"Failed to send order to Google Sheet: {e}", exc_info=True)
 
-            #order minus empty columns for easy printing.
-            order2 += pickup + "," + total + "," + f"{comment}" + "," + f"{items}"
-            order2 = order2.split(",")
-            # "orders" looks like ['Leaks: 25', 'Pickles: 100', 'Customer total is 248.75']
-            # Make API call to the google sheet to post the new order.
-
-            try:
-                wks_label.append_row(order2)
-                wks_order.append_row(order)
-            except Exception as e:
-                logger.error(f"Failed to send order to gsheet for user {user.id}: {e}", exc_info=True)
-
-            # Flash cost totals
+            # Flash success message
             if current_user.email in admins:
-                flash(
-                    f"{user.name}'s total will be ${total}",
-                    "info")
+                flash(f"{user.name}'s total will be ${total}", "info")
                 return redirect(url_for('account_info'))
             else:
-                flash(
-                    f"Thanks for shopping with us. You will receive an email with your invoice shortly. Your total will be ${total}. We will see you soon!",
-                    "info")
+                flash(f"Thanks for shopping with us. Your total will be ${total}.", "info")
                 return redirect(url_for("home"))
 
         elif toggle.set_toggle == 1:
             return render_template("ordering.html", item_matrix=prods, location=location, admins=admins, user=user)
         else:
             return render_template("ordering.html", item_matrix=[], location=location, admins=admins, user=user)
+
     except Exception as e:
-        logger.error(f"Error occurred while processing the order: {e}", exc_info=True)
+        db.session.rollback()
+        logger.error(f"Error processing order: {e}", exc_info=True)
+        flash("An error occurred while processing your order.", "danger")
+        return redirect(url_for("home"))
+
 
 @app.route("/location", methods=['GET', 'POST'])
 @login_required
@@ -956,3 +1123,76 @@ def new_account(token):
         wks_customer_details.append_row(new_customer)
         flash(f"A new account has been created for {new_user['name']}!", "success")
     return redirect(url_for("login"))
+
+
+
+@app.route('/admin/orders/export')
+@login_required
+def export_orders():
+    if current_user.email not in admins:
+        return redirect(url_for('home'))
+
+    selected_week = request.args.get('week', default=None)
+
+    query = db.session.query(Order, User).join(User, Order.user_id == User.id)
+    if selected_week:
+        week_start = datetime.strptime(selected_week, '%Y-%m-%d')
+        week_end = week_start + timedelta(days=6, hours=23, minutes=59, seconds=59)
+        query = query.filter(Order.order_date.between(week_start, week_end))
+
+    orders = query.order_by(Order.order_date.desc()).all()
+
+    si = StringIO()
+    cw = csv.writer(si)
+    cw.writerow([
+        'Order ID', 'User Name', 'Cost', 'Items',
+        'Large Boxes', 'Small Boxes', 'Address',
+        'Date', 'Prepaid', 'Comments'
+    ])
+
+    for order, user in orders:
+        items = db.session.query(OrderItem, Product)\
+            .join(Product, OrderItem.product_id == Product.id)\
+            .filter(OrderItem.order_id == order.id)\
+            .all()
+
+        items_str = ", ".join([
+            f"{item.OrderItem.quantity} x {item.Product.veg_name}"
+            for item in items
+        ])
+
+        box_size = sum(item.OrderItem.quantity * item.Product.veg_vol for item in items)
+        large_boxes = int(box_size)
+        small_boxes = 1 if 0 < (box_size - large_boxes) < 0.5 else 0
+        if (box_size - large_boxes) >= 0.5:
+            large_boxes += 1
+            small_boxes = 0
+
+        cw.writerow([
+            order.id,
+            user.name,
+            round(order.total_cost, 2),
+            items_str,
+            large_boxes,
+            small_boxes,
+            order.pickup_location,
+            order.order_date.strftime('%Y-%m-%d %H:%M'),
+            'Yes' if user.prepaid == '1' else 'No',
+            order.comment or ''
+        ])
+
+    output = si.getvalue()
+    # Create filename based on week
+    if selected_week:
+        filename = f"orders_{selected_week}.csv"
+    else:
+        filename = f"orders_all_{datetime.utcnow().strftime('%Y-%m-%d')}.csv"
+
+    return Response(
+        output,
+        mimetype="text/csv",
+        headers={
+            "Content-Disposition": f"attachment; filename={filename}"
+        }
+    )
+
