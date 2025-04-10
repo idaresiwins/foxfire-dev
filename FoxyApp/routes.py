@@ -698,7 +698,7 @@ def ordering(user_id):
                     items_all.append("0")
 
             #  record volume
-            volume = f"{round(volume * 10) / 10}"
+            volume = f"{str(round(volume * 10) / 10)}"
             order.volume = volume
 
             # Adjust cost for farm pickup
@@ -734,7 +734,7 @@ def ordering(user_id):
             sorted_receipt = "\n".join([f"{qty} {name}" for name, qty in items_sorted])
 
             try:
-                volume = f"{round(volume * 10) / 10}"
+                volume = f"{str(round(volume * 10) / 10)}"
                 order.volume = volume
                 logger.warning("Generating label for user.")
                 label(user, sorted_receipt, pickup, total, dt, comment, volume)
