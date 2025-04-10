@@ -4,11 +4,9 @@ from FoxyApp.foxfireutility import friday
 import os
 
 
-def label(current_user, receipt, pickup, total, dt, comment, volume):
+def label(user, receipt, pickup, total, dt, comment, volume):
     #  declare variables
-    name = f"{current_user.name}"
-    name = name.replace(" ", "_")
-    name2 = f"{current_user.name}\nTotal:${total}"
+    name2 = f"{user.name}\nTotal:${total}"
     farm_address = "Foxfire Farm LLC\n2107 South Fork Ridge Rd. Liberty KY 42539"
     pickup = f"{pickup}"
     receipt = f"{receipt}"
@@ -16,7 +14,7 @@ def label(current_user, receipt, pickup, total, dt, comment, volume):
     balance = "Balance:$______"
     date = friday()
     volume = f"Box Size: {volume}"
-    filename = os.path.join(app.root_path, "static/labels", f"{name}{dt}.jpg")
+    filename = os.path.join(app.root_path, "static/labels", f"{user.id}{dt}.jpg")
     #  font sizes
     fnt = ImageFont.truetype('DejaVuSans.ttf', 25)
     name_font = ImageFont.truetype('DejaVuSans.ttf', 80)
@@ -40,7 +38,7 @@ def label(current_user, receipt, pickup, total, dt, comment, volume):
     date_width, date_height = draw.textsize(receipt, font=receipt_font)
 
     #  add height of "Balance" line if customer is prepaid
-    if current_user.prepaid == "0":
+    if user.prepaid == "0":
         balance_height = 0
 
 
@@ -49,7 +47,7 @@ def label(current_user, receipt, pickup, total, dt, comment, volume):
     text_next_height = 10 + farm_height + 10
     draw.text((10, text_next_height), name2, font=name_font, fill=(0, 0, 0))
 
-    if current_user.prepaid == "1":
+    if user.prepaid == "1":
         text_next_height = 10 + farm_height + name_height + 20
         draw.text((10, text_next_height), balance, font=balance_font, fill=(0, 0, 0))
 

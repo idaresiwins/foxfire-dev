@@ -21,7 +21,7 @@ def createInvoice(user, items, pickup, total, dt, comment):
     pdf.cell(200, 10, txt=f'Comments:', ln=10, align='L')
     pdf.cell(200, 10, txt=f'{comment}', ln=11, align='L')
     pdf.cell(200, 10, txt=f'Customer total: ${total}', ln=12, align='L')
-    pdf.output(os.path.join(app.root_path, f"orderforms/{user.id}{dt}.pdf"))
+    pdf.output(os.path.join(app.root_path, f"orderforms/{user.name.replace(' ','_')}{dt}.pdf"))
 
 def driver_sheet(orders, week=None):
     # Sorting the orders by pickup location (index 1 of the sublists)

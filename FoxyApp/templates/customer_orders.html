@@ -73,14 +73,10 @@
               {% for order in orders %}
               <tr>
                 <td>
-                  {% for label in labels %}
-                    {% if order.user_name.replace(' ', '_') in label %}
-                    <img src="{{ url_for('static', filename='labels/' ~ label) }}"
+                    <img src="{{ url_for('static', filename='labels/' ~ order.invoice + '.jpg') }}"
                          width="40" height="40"
                          style="cursor: pointer;"
-                         onclick="printImage('{{ url_for('static', filename='labels/' ~ label) }}')">
-                    {% endif %}
-                  {% endfor %}
+                         onclick="printImage('{{ url_for('static', filename='labels/' ~ order.invoice + '.jpg') }}')">
                 </td>
                 <td>{{ order.user_name }}</td>
                 <td>${{ order.cost }}</td>

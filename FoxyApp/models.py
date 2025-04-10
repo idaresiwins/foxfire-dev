@@ -61,10 +61,11 @@ class Order(db.Model):
     total_cost = db.Column(db.Float, nullable=False)
     volume = db.Column(db.Float, nullable=False)
     comment = db.Column(db.Text, nullable=True)
+    invoice = db.Column(db.String(200))
     items = db.relationship('OrderItem', backref='order', lazy=True)
 
     def __repr__(self):
-        return f"Order('{self.id}', '{self.user_id}', '{self.order_date}', '{self.total_cost}')"
+        return f"Order('{self.id}', '{self.user_id}', '{self.order_date}', '{self.total_cost}', '{self.invoice}')"
 
 # New OrderItem model
 class OrderItem(db.Model):
