@@ -57,6 +57,7 @@
         <table class="table table-striped">
             <thead>
                 <tr>
+                    <th>Label</th>
                     <th>Customer</th>
                     <th>Cost</th>
                     <th>Items</th>
@@ -69,19 +70,29 @@
                 </tr>
             </thead>
             <tbody>
-                {% for order in orders %}
-                <tr>
-                    <td>{{ order.user_name }}</td>
-                    <td>${{ order.cost }}</td>
-                    <td>{{ order["items"] | replace('\n', '<br>') | safe }}</td>
-                    <td>{{ order.large_boxes }}</td>
-                    <td>{{ order.small_boxes }}</td>
-                    <td>{{ order.address }}</td>
-                    <td>{{ order.date }}</td>
-                    <td>{{ 'Yes' if order.prepaid else 'No' }}</td>
-                    <td>{{ order.comments }}</td>
-                </tr>
-                {% endfor %}
+              {% for order in orders %}
+              <tr>
+                <td>
+                  {% for label in labels %}
+                    {% if order.user_name.replace(' ', '_') in label %}
+                    <img src="{{ url_for('static', filename='labels/' ~ label) }}"
+                         width="40" height="40"
+                         style="cursor: pointer;"
+                         onclick="printImage('{{ url_for('static', filename='labels/' ~ label) }}')">
+                    {% endif %}
+                  {% endfor %}
+                </td>
+                <td>{{ order.user_name }}</td>
+                <td>${{ order.cost }}</td>
+                <td>{{ order["items"] | replace('\n', '<br>') | safe }}</td>
+                <td>{{ order.large_boxes }}</td>
+                <td>{{ order.small_boxes }}</td>
+                <td>{{ order.address }}</td>
+                <td>{{ order.date }}</td>
+                <td>{{ 'Yes' if order.prepaid else 'No' }}</td>
+                <td>{{ order.comments }}</td>
+              </tr>
+              {% endfor %}
             </tbody>
         </table>
     </div>
@@ -125,6 +136,14 @@ function printItemCounts() {
     printWindow.focus();
     printWindow.print();
     printWindow.close();
+}
+function printImage(imageSrc) {
+    const win = window.open('', '', 'width=800,height=600');
+    win.document.write('<html><head><title>Print Label</title></head><body>');
+    win.document.write('<img src="' + imageSrc + '" onload="window.print();window.close()">');
+    win.document.write('</body></html>');
+    win.document.close();
+    win.focus();
 }
 </script>
 
