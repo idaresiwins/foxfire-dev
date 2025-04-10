@@ -3,11 +3,11 @@
 <div id="carouselExampleAutoplaying" class="carousel slide" data-bs-ride="carousel">
     <div class="carousel-inner">
         <div class="carousel-item active">
-            <img class="d-block"  style="height:90vh;" src="/static/uploads/{{pics[0].image}}" alt="{{pics[0].name}}">
+            <img class="d-block"  style="height:90vh;" src="/static/photo/{{pics[0].image}}" alt="{{pics[0].name}}">
         </div>
         {% for pic in pics %}
         <div class="carousel-item">
-            <img class="d-block" style="height:90vh;" src="/static/uploads/{{pic.image}}" alt="{{pic.name}}">
+            <img class="d-block" style="height:90vh;" src="/static/photo/{{pic.image}}" alt="{{pic.name}}">
         </div>
         {% endfor %}
     </div>
