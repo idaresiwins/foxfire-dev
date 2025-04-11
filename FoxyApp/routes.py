@@ -78,25 +78,27 @@ def admin_orders():
 
     selected_week = request.args.get('week', default=None)
     today = datetime.utcnow()
-    current_monday = today - timedelta(days=today.weekday())
+    # Find most recent Friday (weekday 4 = Friday)
+    days_since_friday = (today.weekday() - 4) % 7
+    current_friday = today - timedelta(days=days_since_friday)
 
-    # Generate last 12 weeks
-    # Build list of weeks
     weeks = []
     for i in range(12):
-        week_start = current_monday - timedelta(weeks=i)
-        week_end = week_start + timedelta(days=6)
+        friday = current_friday - timedelta(weeks=i)
+        label = friday.strftime('%d %b %Y')
         weeks.append({
-            'start': week_start.strftime('%Y-%m-%d'),
-            'label': f"{week_start.strftime('%d %b %Y')} - {week_end.strftime('%d %b %Y')}"
+            'start': friday.strftime('%Y-%m-%d'),  # Used as selection key
+            'label': f"Week ending {label}"
         })
 
     # Query orders
     query = db.session.query(Order, User).join(User, Order.user_id == User.id)
 
     if selected_week:
-        week_start = datetime.strptime(selected_week, '%Y-%m-%d')
-        week_end = datetime.combine(week_start + timedelta(days=6), time.max)
+        # Parse selected Friday
+        selected_friday = datetime.strptime(selected_week, '%Y-%m-%d')
+        week_start = datetime.combine(selected_friday - timedelta(days=6), time.min)  # Saturday before
+        week_end = datetime.combine(selected_friday, time.max)  # Inclusive of Friday
         query = query.filter(Order.order_date.between(week_start, week_end))
 
     orders = query.order_by(Order.order_date.desc()).all()
