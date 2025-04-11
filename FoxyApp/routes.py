@@ -1125,7 +1125,6 @@ def new_account(token):
     return redirect(url_for("login"))
 
 
-
 @app.route('/admin/orders/export')
 @login_required
 def export_orders():
