@@ -656,7 +656,6 @@ def ordering(user_id):
                 loc = Location.query.filter_by(id=int(purch["fulfill_location"])).first()
                 pickup = loc.short_name
                 pickup_address = loc.long_name
-
             logger.warning(f"Pickup location determined: {pickup_address}")
 
             # Create the order
@@ -702,9 +701,8 @@ def ordering(user_id):
             #  record volume
             volume = f"{round(volume * 10) / 10}"
             order.volume = volume
-
             # Adjust cost for farm pickup
-            if pickup == "FARM" or "farm":
+            if pickup in ["FARM", "farm"]:
                 cost *= 0.80
             cost = round(cost * 2) / 2
             order.total_cost = cost
