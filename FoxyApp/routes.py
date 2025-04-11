@@ -608,13 +608,13 @@ logger = logging.getLogger(__name__)
 @app.route("/ordering/<int:user_id>", methods=["POST", "GET"])
 @login_required
 def ordering(user_id):
-    logger.warning(f"Accessing ordering page for user_id: {user_id}, current_user: {current_user.id}")
+    logger.warning(f"{app.root_path}: Accessing ordering page for user_id: {user_id}, current_user: {current_user.id}")
     if current_user.email in admins:  # Allow admins to place OOB orders
-        logger.warning("Admin user is placing an order.")
+        logger.warning(f"{app.root_path}: Admin user is placing an order.")
     elif current_user.id == user_id:  # Allow users to place order for themselves
-        logger.warning("User is placing an order for themselves.")
+        logger.warning(f"{app.root_path}: User is placing an order for themselves.")
     else:
-        logger.warning(f"Unauthorized order attempt by user {current_user.id} for user_id: {user_id}")
+        logger.warning(f"{app.root_path}: Unauthorized order attempt by user {current_user.id} for user_id: {user_id}")
         flash("Do not do that!", "danger")
         return render_template('home.html')
 
@@ -629,7 +629,7 @@ def ordering(user_id):
 
     try:
         if request.method == "POST":
-            logger.warning(f"Processing order for user: {user.name}")
+            logger.warning(f"{app.root_path}: Processing order for user: {user.name}")
             purch = request.form
             dt = datetime.now().strftime('-%y%m%d%H%M%S%f')
             cost = 0.0
@@ -658,7 +658,7 @@ def ordering(user_id):
                 loc = Location.query.filter_by(id=int(purch["fulfill_location"])).first()
                 pickup = loc.short_name
                 pickup_address = loc.long_name
-            logger.warning(f"Pickup location determined: {pickup_address}")
+            logger.warning(f"{app.root_path}: Pickup location determined: {pickup_address}")
 
             # Create the order
             order = Order(
@@ -711,23 +711,23 @@ def ordering(user_id):
             db.session.commit()  # Commit the order and items
 
             total = f"{cost:.2f}"
-            logger.warning(f"Order total calculated: {total}")
+            logger.warning(f"{app.root_path}: Order total calculated: {total}")
 
             # Generate receipt and PDF
             receipt = "\n".join(items)
             try:
-                logger.warning("Creating invoice for user.")
+                logger.warning(f"{app.root_path}: Creating invoice for user.")
                 createInvoice(user, receipt, pickup_address, total, dt, comment)
-                logger.warning("Invoice created successfully.")
+                logger.warning(f"{app.root_path}: Invoice created successfully.")
             except Exception as e:
-                logger.error(f"Failed to create invoice: {e}", exc_info=True)
+                logger.error(f"{app.root_path}: Failed to create invoice: {e}", exc_info=True)
 
             try:
-                logger.warning("Sending receipt email to user.")
+                logger.warning(f"{app.root_path}: Sending receipt email to user.")
                 send_receipt_email(user, receipt, pickup_address, total, dt, comment)
-                logger.warning("Email sent successfully.")
+                logger.warning(f"{app.root_path}: Email sent successfully.")
             except Exception as e:
-                logger.error(f"Failed to send email: {e}", exc_info=True)
+                logger.error(f"{app.root_path}: Failed to send email: {e}", exc_info=True)
 
             # Generate sorted receipt for label
             items_list = [(item.product.veg_name, item.quantity) for item in order.items]
@@ -736,11 +736,11 @@ def ordering(user_id):
             sorted_receipt = "\n".join([f"{qty} {name}" for name, qty in items_sorted])
 
             try:
-                logger.warning("Generating label for user.")
+                logger.warning(f"{app.root_path}: Generating label for user.")
                 label(user, sorted_receipt, pickup, total, dt, comment, volume)
-                logger.warning("Label generated successfully.")
+                logger.warning(f"{app.root_path}: Label generated successfully.")
             except Exception as e:
-                logger.error(f"Failed to generate label: {e}", exc_info=True)
+                logger.error(f"{app.root_path}: Failed to generate label: {e}", exc_info=True)
 
             ## Optionally keep Google Sheets sync (remove if not needed)
             #order_row = [user.name, pickup, total, comment] + items_all
@@ -749,7 +749,7 @@ def ordering(user_id):
             #    wks_label.append_row(order_row2)
             #    wks_order.append_row(order_row)
             #except Exception as e:
-            #    logger.error(f"Failed to send order to Google Sheet: {e}", exc_info=True)
+            #    logger.error(f"{app.root_path}: Failed to send order to Google Sheet: {e}", exc_info=True)
 
             # Flash success message
             if current_user.email in admins:
@@ -766,7 +766,7 @@ def ordering(user_id):
 
     except Exception as e:
         db.session.rollback()
-        logger.error(f"Error processing order: {e}", exc_info=True)
+        logger.error(f"{app.root_path}: Error processing order: {e}", exc_info=True)
         flash("An error occurred while processing your order.", "danger")
         return redirect(url_for("home"))
 
