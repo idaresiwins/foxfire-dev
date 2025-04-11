@@ -29,7 +29,7 @@ class User(db.Model, UserMixin):
     def verify_reset_token(token):
         s = Serializer(app.secret_key)
         try:
-            user_id = s.loads(token, max_age=86400)['user_id']
+            user_id = s.loads(token, max_age=86400 * 4)['user_id']
         except:
             return None
         return User.query.get(user_id)
