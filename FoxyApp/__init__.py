@@ -4,7 +4,13 @@ from flask_bcrypt import Bcrypt
 from flask_login import LoginManager
 from flask_mail import Mail
 from flask_migrate import Migrate
+from dotenv import load_dotenv
 import os
+
+# Load .env file from the parent directory
+parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+load_dotenv(dotenv_path=os.path.join(parent_dir, ".env"), override=True)
+
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get("FOX_SECRET_KEY")
 app.secret_key = app.config['SECRET_KEY']

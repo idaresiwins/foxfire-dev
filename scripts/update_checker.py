@@ -4,7 +4,11 @@ import shutil
 import logging
 import requests
 import time
+from dotenv import load_dotenv
 
+# Load .env file from the parent directory
+parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+load_dotenv(dotenv_path=os.path.join(parent_dir, ".env"), override=True)
 
 LOG_FILE = "/var/log/dev.foxfirefarmky.com/update_log.txt"
 REJECTED_COMMITS_FILE = "/var/www/dev.foxfirefarmky.com/FoxfireApp/rejected_commits.txt"
@@ -199,7 +203,7 @@ def validate_wsgi_start():
 
 def restart_server():
     try:
-        subprocess.run(['sudo', 'systemctl', 'restart', 'apache2'], check=True)
+        subprocess.run(['sudo', 'systemctl', 'reload', 'apache2'], check=True)
         logging.info("Apache restarted successfully.")
         # Validate WSGI startup
         if validate_wsgi_start():
@@ -248,7 +252,7 @@ def execute_commands(file_path):
 
 if __name__ == "__main__":
     # GitHub repository URL
-    FOX_REPO_URL = os.environ.get("FOX_DEV_REPO")
+    FOX_REPO_URL = os.environ.get("FOX_REPO")
     # Path to the Flask app directory
     REPO_PATH = "/var/www/dev.foxfirefarmky.com/FoxfireApp/"
     logging.info("Starting update process...")

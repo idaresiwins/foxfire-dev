@@ -232,8 +232,6 @@ def driver_form_week():
     # selected_week is the Friday of the week
     week_end = datetime.strptime(selected_week, '%Y-%m-%d')
     week_start = datetime.combine(week_end - timedelta(days=6), time.min)
-
-    print(f"{week_start}" + " : " + f"{week_end}")
     orders_query = db.session.query(Order, User).join(User, Order.user_id == User.id).filter(
         Order.order_date.between(week_start, week_end)
     ).all()
