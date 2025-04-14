@@ -9,6 +9,7 @@ from FoxyApp.foxfiresheet import wks_order, wks_customer_details, wks_label, cyc
 from FoxyApp.foxfirepdf import createInvoice, driver_sheet
 from FoxyApp.foxfiretok import get_account_token, approve_account_token
 from FoxyApp.label import label
+from FoxyApp.foxfireutility import friday as get_this_friday
 import secrets
 import os
 import logging
@@ -77,17 +78,16 @@ def admin_orders():
         return redirect(url_for('home'))
 
     selected_week = request.args.get('week', default=None)
-    today = datetime.utcnow()
     # Find most recent Friday (weekday 4 = Friday)
-    days_since_friday = (today.weekday() - 4) % 7
-    current_friday = today - timedelta(days=days_since_friday)
+    this_friday_str = get_this_friday()
+    current_friday = datetime.strptime(this_friday_str, "%d-%b-%Y")
 
     weeks = []
     for i in range(12):
-        friday = current_friday - timedelta(weeks=i)
-        label = friday.strftime('%d %b %Y')
+        friday_date = current_friday - timedelta(weeks=i)
+        label = friday_date.strftime('%d %b %Y')
         weeks.append({
-            'start': friday.strftime('%Y-%m-%d'),  # Used as selection key
+            'start': friday_date.strftime('%Y-%m-%d'),
             'label': f"Week ending {label}"
         })
 
@@ -229,9 +229,11 @@ def driver_form_week():
         flash("Please select a week to generate the driver sheet.", "warning")
         return redirect(url_for("admin_orders"))
 
-    # Query orders for the selected week
-    week_start = datetime.strptime(selected_week, '%Y-%m-%d')
-    week_end = datetime.combine(week_start + timedelta(days=6), time.max)
+    # selected_week is the Friday of the week
+    week_end = datetime.strptime(selected_week, '%Y-%m-%d')
+    week_start = datetime.combine(week_end - timedelta(days=6), time.min)
+
+    print(f"{week_start}" + " : " + f"{week_end}")
     orders_query = db.session.query(Order, User).join(User, Order.user_id == User.id).filter(
         Order.order_date.between(week_start, week_end)
     ).all()
