@@ -86,13 +86,8 @@
                     {% endif %}
                 </div>
                 <div class="form-check mt-2 mb-2" style="font-size:1em; text-align:left;">
-                    {% if item_matrix.veg_sale == '0' %}
-                    {{ form.veg_sale(class="form-check-input", checked=False) }}
+                    {{ form.veg_sale(class="form-check-input") }}
                     {{ form.veg_sale.label(class="form-check-label") }}
-                    {% else %}
-                    {{ form.veg_sale(class="form-check-input", checked=True) }}
-                    {{ form.veg_sale.label(class="form-check-label") }}
-                    {% endif %}
                 </div>
                 <div class="form-check mt-2 mb-2" style="font-size:1em; text-align:left;">
                     {{ form.veg_dlt(class="form-check-input") }}

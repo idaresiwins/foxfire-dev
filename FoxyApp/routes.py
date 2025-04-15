@@ -322,6 +322,7 @@ def edit_products(veg_id):
             prods.veg_url = form.veg_url.data
             prods.veg_weight = form.veg_weight.data
             prods.veg_vol = form.veg_vol.data
+            prods.veg_sale = form.veg_sale.data
             if form.veg_image.data and not None:
                 picture = sav_thumbnail(form.veg_image.data)
                 prods.veg_image = picture
@@ -338,8 +339,7 @@ def edit_products(veg_id):
             form.veg_vol.data = prods.veg_vol
             form.veg_image.data = prods.veg_image
             form.veg_dlt.data = prods.archive
-            #  form.veg_sale.data = prods.veg_sale   this resulted in the checkbox being checked no matter the value.
-            #  Resorted to IF statement in the template with checked=True/False for each condition.
+            form.veg_sale.data = prods.veg_sale
         return render_template("edit_product.html", form=form, item_matrix=prods)
 
 

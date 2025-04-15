@@ -34,7 +34,7 @@
                 {% endif %}
                 <p>{{veggie.veg_name}} - ${{ veggie.veg_price }}</p>
                 </a>
-                {% if veggie.veg_sale == "1" %}
+                {% if veggie.veg_sale %}
                 <img src="/static/photos/available.png">
                 {% else %}
                 {% endif %}
