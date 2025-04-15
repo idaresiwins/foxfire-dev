@@ -351,14 +351,10 @@ def manage_products():
         toggle = Toggle.query.filter_by(id=1).first()
         prods = Product.query.filter_by(archive=False).order_by(Product.veg_name)
         if form.validate_on_submit():
-            if form.set_toggle.data == True:
-                toggle.set_toggle = 1
-                db.session.commit()
-                return render_template(url_for("manage_products"), item_matrix=prods, form=form, toggle = toggle)
-            elif form.set_toggle.data == False:
-                toggle.set_toggle = 0
-                db.session.commit()
-                return render_template(url_for("manage_products"), item_matrix=prods, form=form, toggle = toggle)
+            toggle.set_toggle = form.set_toggle.data
+            db.session.commit()
+            return render_template(url_for("manage_products"), item_matrix=prods, form=form, toggle = toggle)
+
         return render_template(url_for("manage_products"), item_matrix=prods, form=form, toggle = toggle)
 
 
