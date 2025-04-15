@@ -162,7 +162,7 @@ def backup_repo(repo_path, backup_path):
             shutil.rmtree(backup_path, onerror=handle_remove_error)
         shutil.copytree(repo_path,
                         backup_path,
-                        ignore=shutil.ignore_patterns('venv', '.git', '.gitignore')
+                        ignore=shutil.ignore_patterns('venv', '.git', '.gitignore', '.env')
                         )
         logging.info(f"Backup created at {backup_path}.")
     except Exception as e:
@@ -175,7 +175,7 @@ def restore_backup(backup_path, repo_path):
         shutil.copytree(backup_path,
                         repo_path,
                         dirs_exist_ok=True,
-                        ignore=shutil.ignore_patterns('venv', '.git', '.gitignore')
+                        ignore=shutil.ignore_patterns('venv', '.git', '.gitignore', '.env')
                         )
         pass  # logging.info(f"Backup restored from {backup_path}.")
     except Exception:
