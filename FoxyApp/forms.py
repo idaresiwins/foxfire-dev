@@ -50,7 +50,7 @@ class AccountForm(FlaskForm):
     state = StringField("State", validators=[Length(min=2, max=20), no_http_characters])
     zipcode = StringField("Zip Code", validators=[Length(min=5, max=10), no_http_characters])
     phone = StringField("Phone Number", validators=[Length(min=7, max=20), no_http_characters])
-    dlt = BooleanField("Delete account permanently?")
+    dlt = BooleanField("Archive account?")
     submit = SubmitField("Update")
 
     def validate_email(self, email):
@@ -69,7 +69,7 @@ class EditAccountForm(FlaskForm):
     state = StringField("State", validators=[Length(min=2, max=20), no_http_characters])
     zipcode = StringField("Zip Code", validators=[Length(min=5, max=10), no_http_characters])
     phone = StringField("Phone Number", validators=[Length(min=7, max=20), no_http_characters])
-    dlt = BooleanField("Delete account permanently?")
+    dlt = BooleanField("Archive account?")
     prepaid = BooleanField("Prepaid")
     submit = SubmitField("Update")
 
@@ -82,7 +82,7 @@ class NewProductForm(FlaskForm):
     veg_weight = IntegerField("Weight (Whole numbers only.)")
     veg_vol = FloatField("Decimal part of a box (1.0 equals one full box)")
     veg_sale = BooleanField("Post for sale immediately?")
-    veg_dlt = BooleanField("Delete product permanently?")
+    veg_dlt = BooleanField("Archive product?")
     submit = SubmitField("Post!")
 
 class RequestResetForm(FlaskForm):

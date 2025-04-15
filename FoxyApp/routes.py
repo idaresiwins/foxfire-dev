@@ -1,11 +1,10 @@
 from flask import render_template, redirect, request, url_for, flash, send_file, jsonify, Response
 from flask_login import login_user, current_user, logout_user, login_required
 from flask_mail import Message
-from FoxyApp import app, bcrypt, db, mail, admins, api_key
+from FoxyApp import app, bcrypt, db, mail, admins
 from FoxyApp.forms import RegistrationForm, LoginForm, AccountForm, EditAccountForm, NewProductForm, RequestResetForm, \
-    ResetPasswordForm, PostForm, NewPictureForm, ToggleForm, CycleForm, LocationForm
+    ResetPasswordForm, PostForm, NewPictureForm, ToggleForm, LocationForm
 from FoxyApp.models import User, Product, Post, Picture, Toggle, Location, Order, OrderItem
-from FoxyApp.foxfiresheet import wks_order, wks_customer_details, wks_label, cycle, refresh_worksheet
 from FoxyApp.foxfirepdf import createInvoice, driver_sheet
 from FoxyApp.foxfiretok import get_account_token, approve_account_token
 from FoxyApp.label import label
@@ -45,27 +44,7 @@ def health_check():
 @login_required
 def admin():
     if current_user.email in admins:
-        form = CycleForm()
-        if request.method == "POST" and form.set_toggle.data == True:
-            query = Product.query.order_by(Product.veg_name).filter_by(veg_sale=True)
-            lis = list(query)
-            prods = ["Name", "Location", "Total", "Comments"]
-            for item in lis:
-                prods.append(item.veg_name)
-            cycle(prods)
-            folder_path = os.path.join(app.root_path, "static/labels")
-            entries = os.listdir(folder_path)
-            files = [entry for entry in entries if os.path.isfile(os.path.join(folder_path, entry))]
-            for f in files:
-                label = os.path.join(app.root_path, "static/labels", f)
-                os.remove(label)
-            return render_template("admin.html", form=form)
-        else:
-            folder_path = os.path.join(app.root_path, "static/labels")
-            entries = os.listdir(folder_path)
-            files = [entry for entry in entries if os.path.isfile(os.path.join(folder_path, entry))]
-            sorted_files = sorted(files, key=lambda x: os.path.getctime(os.path.join(folder_path, x)))
-            return render_template("admin.html", form=form, labels=sorted_files)
+        return redirect(url_for("admin_orders"))
     else:
         flash("You are not authorized.", "danger")
         return redirect(url_for("home"))
@@ -292,15 +271,6 @@ def new_product():
             db.session.add(veggie)
             db.session.commit()
 
-            # If product was listed for sale, update order form with new products so columns are not messed up
-            if form.veg_sale.data == True:
-                query = Product.query.order_by(Product.veg_name).filter_by(veg_sale=True)
-                lis = list(query)
-                prods = ["Name", "Location", "Total", "Comments"]
-                for item in lis:
-                    prods.append(item.veg_name)
-                wks_order.append_row(prods)
-
             flash("Your new product has been added", "success")
             return redirect(url_for("new_product"))
         return render_template(url_for("new_product"), form=form, item_matrix=prods)
@@ -346,10 +316,7 @@ def edit_products(veg_id):
         prods = Product.query.get_or_404(veg_id)
         form = NewProductForm()
         if form.validate_on_submit():
-            if form.veg_dlt.data == True:
-                delete_veg(veg_id)
-                return redirect(url_for('manage_products', post_id=prods.id))
-            flash("The Item has been updated!", "success")
+            prods.archive=form.veg_dlt.data
             prods.veg_name = form.veg_name.data
             prods.veg_price = form.veg_price.data
             prods.veg_url = form.veg_url.data
@@ -359,24 +326,9 @@ def edit_products(veg_id):
                 picture = sav_thumbnail(form.veg_image.data)
                 prods.veg_image = picture
 
-            # Translate text boolean to digit
-            if form.veg_sale.data == True:
-                form.veg_sale.data = 1
-            else:
-                form.veg_sale.data = 0
-
-            #Check to see if the For Sale status has been changed. We need to know this to see if we need to update the orders sheet.
-            if int(prods.veg_sale) != int(form.veg_sale.data):
-                prods.veg_sale = form.veg_sale.data
-                # update order form with new products so columns are not messed up
-                query = Product.query.order_by(Product.veg_name).filter_by(veg_sale=True)
-                lis = list(query)
-                prods = ["Name", "Location", "Total", "Comments"]
-                for item in lis:
-                    prods.append(item.veg_name)
-                wks_order.append_row(prods)
             prods = Product.query.get_or_404(veg_id)
             db.session.commit()
+            flash("The Item has been updated!", "success")
             return render_template("edit_product.html", form=form, item_matrix=prods)
         elif request.method == "GET":
             form.veg_name.data = prods.veg_name
@@ -385,6 +337,7 @@ def edit_products(veg_id):
             form.veg_weight.data = prods.veg_weight
             form.veg_vol.data = prods.veg_vol
             form.veg_image.data = prods.veg_image
+            form.veg_dlt.data = prods.archive
             #  form.veg_sale.data = prods.veg_sale   this resulted in the checkbox being checked no matter the value.
             #  Resorted to IF statement in the template with checked=True/False for each condition.
         return render_template("edit_product.html", form=form, item_matrix=prods)
@@ -396,11 +349,8 @@ def manage_products():
     if current_user.email in admins:
         form = ToggleForm()
         toggle = Toggle.query.filter_by(id=1).first()
-        prods = Product.query.order_by(Product.veg_name).all()
+        prods = Product.query.filter_by(archive=False).order_by(Product.veg_name)
         if form.validate_on_submit():
-            #t = Toggle(name="Ordering", set_toggle=1, id=1)
-            #db.session.add(t)
-            #db.session.commit()
             if form.set_toggle.data == True:
                 toggle.set_toggle = 1
                 db.session.commit()
@@ -618,8 +568,8 @@ def ordering(user_id):
         flash("Do not do that!", "danger")
         return render_template('home.html')
 
-    prods = Product.query.order_by(Product.veg_name).filter_by(veg_sale=True).all()
-    prods2 = Product.query.order_by(Product.veg_weight).filter_by(veg_sale=True).all()
+    prods = Product.query.order_by(Product.veg_name).filter(Product.veg_sale==True, Product.archive==False).all()
+    prods2 = Product.query.order_by(Product.veg_weight).filter(Product.veg_sale==True, Product.archive==False).all()
     location = Location.query.filter_by(active=True).all()
     user = User.query.filter_by(id=user_id).first()
 
@@ -873,28 +823,6 @@ def delete_post(post_id):
         return redirect(url_for('admin'))
 
 
-@app.route("/product/<int:veg_id>/delete", methods=['POST'])
-@login_required
-def delete_veg(veg_id):
-    if current_user.email in admins:
-        veg = Product.query.get_or_404(veg_id)
-        upload_deleter(veg.veg_image)
-        db.session.delete(veg)
-        db.session.commit()
-
-        # If product was listed for sale, update order form with new products so columns are not messed up
-        if veg.veg_sale == "1":
-            query = Product.query.order_by(Product.veg_name).filter_by(veg_sale=True)
-            lis = list(query)
-            prods = ["Name", "Location", "Total", "Comments"]
-            for item in lis:
-                prods.append(item.veg_name)
-            wks_order.append_row(prods)
-
-        flash('Your product has been deleted!', 'success')
-        return redirect(url_for('admin'))
-
-
 def sav_thumbnail(pic_in):
     random_hex = secrets.token_hex(4)
     _, f_ext = os.path.splitext(pic_in.filename)
@@ -970,7 +898,7 @@ def logout():
 
 @app.route("/products.html")
 def products():
-    prods = Product.query.order_by(Product.veg_name).all()
+    prods = Product.query.filter_by(archive=False).order_by(Product.veg_name).all()
     return render_template(url_for("products"), item_matrix=prods)
 
 
@@ -1119,8 +1047,6 @@ def new_account(token):
         db.session.commit()
         user = User.query.filter_by(email=new_user['email']).first()
         customer_account_email(user)
-        new_customer = [ user.id, user.name, user.address, user.city,  user.state, user.zipcode, user.phone, user.email]
-        wks_customer_details.append_row(new_customer)
         flash(f"A new account has been created for {new_user['name']}!", "success")
     return redirect(url_for("login"))
 

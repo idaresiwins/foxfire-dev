@@ -19,6 +19,7 @@ class User(db.Model, UserMixin):
     email = db.Column(db.String(120), unique=True, nullable=False)
     password = db.Column(db.String(60), nullable=False)
     prepaid = db.Column(db.String(1), nullable=False, default='0')
+    archive = db.Column(db.Boolean, nullable=False, default=False)
     orders = db.relationship('Order', backref='customer', lazy=True)
 
     def get_reset_token(self):
@@ -47,6 +48,7 @@ class Product(db.Model):
     veg_sale = db.Column(db.String(20), nullable=False)
     veg_weight = db.Column(db.Integer, nullable=False, default=0)
     veg_vol = db.Column(db.Float, nullable=False, default=0.0)
+    archive = db.Column(db.Boolean, nullable=False, default=False)
     order_items = db.relationship('OrderItem', backref='product', lazy=True)
 
     def __repr__(self):
