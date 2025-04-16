@@ -472,12 +472,6 @@ def edit_account(user_id):
         form = EditAccountForm()
         user = User.query.get_or_404(user_id)
         if form.validate_on_submit():
-            if form.archive.data:
-                user.archive = form.archive.data
-                db.session.commit()
-                flash('The user has been archived!', 'success')
-                return redirect(url_for('admin_orders'))
-
             user.name = form.name.data
             user.address = form.address.data
             user.city = form.city.data
@@ -486,6 +480,7 @@ def edit_account(user_id):
             user.phone = form.phone.data
             user.email = form.email.data
             user.prepaid = form.prepaid.data
+            user.archive = form.archive.data
             db.session.commit()
             flash("Your account has been updated.", 'success')
             return redirect(url_for("account_info", _anchor=f"user-{user.id}"))
