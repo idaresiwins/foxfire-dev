@@ -215,9 +215,16 @@ def driver_form_week():
         flash("Please select a week to generate the driver sheet.", "warning")
         return redirect(url_for("admin_orders"))
 
-    # selected_week is the Friday of the week
-    week_end = datetime.strptime(selected_week, '%Y-%m-%d')
-    week_start = datetime.combine(week_end - timedelta(days=6), time.min)
+    try:
+        # Parse selected_week as the Friday of the week
+        week_end = datetime.strptime(selected_week, '%Y-%m-%d')
+        week_start = datetime.combine(week_end - timedelta(days=6), time.min)  # Saturday before
+        week_end = datetime.combine(week_end, time.max)  # Friday 23:59:59
+    except ValueError:
+        flash("Invalid week date format.", "danger")
+        return redirect(url_for("admin_orders"))
+
+    # Query orders for the week
     orders_query = db.session.query(Order, User).join(User, Order.user_id == User.id).filter(
         Order.order_date.between(week_start, week_end)
     ).all()
@@ -238,8 +245,12 @@ def driver_form_week():
         orders.append(order_row)
 
     # Generate the PDF using driver_sheet
-    filename = driver_sheet(orders, week=selected_week)
-    return redirect(url_for('static', filename=filename))
+    try:
+        filename = driver_sheet(orders, week=selected_week)
+        return redirect(url_for('static', filename=filename))
+    except Exception as e:
+        flash(f"Error generating driver sheet: {str(e)}", "danger")
+        return redirect(url_for("admin_orders"))
 
 @app.route("/orderform/<pdf>", methods=["POST", "GET"])
 @login_required
