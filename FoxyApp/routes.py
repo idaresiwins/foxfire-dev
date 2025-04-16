@@ -29,8 +29,8 @@ from io import StringIO
 #   1. auto deduct.
 #   2. show customer their balance as they shop + debit if balance exceeded.
 #   3. show admins outstanding prepaid total.
+#  todo allow users to see their orders and edit them.
 ########################################################################################################################
-
 #  todo make items available for admins, whether customers can place orders or not. This cannot affect the google sheet.
 #  todo make number of items on the label more visible
 # add item volume to items, calculate volume of box needed
@@ -133,7 +133,7 @@ def admin_orders():
             'small_boxes': small_boxes,
             'address': order.pickup_location,
             'date': order.order_date.strftime('%Y-%m-%d %H:%M'),
-            'prepaid': user.prepaid == '1',
+            'prepaid': user.prepaid,
             'comments': order.comment or '',
             'invoice' : order.invoice
         })
@@ -439,6 +439,9 @@ def create_dummy():
 @app.route('/account.html', methods=["POST", "GET"])
 @login_required
 def account():
+    if current_user.archive:
+        flash(f"Your account is locked", 'danger')
+        return redirect(url_for("login"))
     form = AccountForm()
     if form.validate_on_submit():
         flash("Your account has been updated.", 'success')
@@ -469,17 +472,11 @@ def edit_account(user_id):
         form = EditAccountForm()
         user = User.query.get_or_404(user_id)
         if form.validate_on_submit():
-            if form.dlt.data:
-                db.session.delete(user)
+            if form.archive.data:
+                user.archive = form.archive.data
                 db.session.commit()
-                flash('The user has been deleted!', 'success')
-                return redirect(url_for('admin'))
-
-            # Translate text boolean to digit
-            if form.prepaid.data == True:
-                user.prepaid = '1'
-            else:
-                user.prepaid = '0'
+                flash('The user has been archived!', 'success')
+                return redirect(url_for('admin_orders'))
 
             user.name = form.name.data
             user.address = form.address.data
@@ -488,6 +485,7 @@ def edit_account(user_id):
             user.zipcode = form.zipcode.data
             user.phone = form.phone.data
             user.email = form.email.data
+            user.prepaid = form.prepaid.data
             db.session.commit()
             flash("Your account has been updated.", 'success')
             return redirect(url_for("account_info", _anchor=f"user-{user.id}"))
@@ -500,6 +498,8 @@ def edit_account(user_id):
             form.zipcode.data = user.zipcode
             form.phone.data = user.phone
             form.email.data = user.email
+            form.prepaid.data = user.prepaid
+            form.archive.data = user.archive
         return render_template('edit_account.html', title="Account", form=form, user=user)
 
 
@@ -569,7 +569,7 @@ def ordering(user_id):
     location = Location.query.filter_by(active=True).all()
     user = User.query.filter_by(id=user_id).first()
 
-    if user.prepaid == "1":
+    if user.prepaid:
         user.name = user.name + "(P)"
     toggle = Toggle.query.filter_by(id=1).first()
 
@@ -704,8 +704,9 @@ def ordering(user_id):
             else:
                 flash(f"Thanks for shopping with us. Your total will be ${total}.", "info")
                 return redirect(url_for("home"))
-
-        elif toggle.set_toggle == 1:
+        elif current_user.email in admins:
+            return render_template("ordering.html", item_matrix=prods, location=location, admins=admins, user=user)
+        elif toggle.set_toggle:
             return render_template("ordering.html", item_matrix=prods, location=location, admins=admins, user=user)
         else:
             return render_template("ordering.html", item_matrix=[], location=location, admins=admins, user=user)
@@ -874,6 +875,9 @@ def login():
     form = LoginForm()
     if form.validate_on_submit():
         user = User.query.filter_by(email=form.email.data).first()
+        if user.archive:
+            flash(f"Your account is locked", 'danger')
+            return render_template(url_for("login"), title="Login", form=form)
         if user and bcrypt.check_password_hash(user.password, form.password.data):
             login_user(user, remember=form.remember.data)
             if current_user.email in admins:
@@ -1098,7 +1102,7 @@ def export_orders():
             small_boxes,
             order.pickup_location,
             order.order_date.strftime('%Y-%m-%d %H:%M'),
-            'Yes' if user.prepaid == '1' else 'No',
+            'Yes' if user.prepaid else 'No',
             order.comment or ''
         ])
 

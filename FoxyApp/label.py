@@ -38,16 +38,13 @@ def label(user, receipt, pickup, total, dt, comment, volume):
     date_width, date_height = draw.textsize(date, font=date_font)
 
     #  add height of "Balance" line if customer is prepaid
-    if user.prepaid == "0":
+    if not user.prepaid:
         balance_height = 0
-
-
     draw.text((10,10), f"{farm_address}", font=fnt, fill=(0,0,0))
-
     text_next_height = 10 + farm_height + 10
     draw.text((10, text_next_height), name2, font=name_font, fill=(0, 0, 0))
 
-    if user.prepaid == "1":
+    if user.prepaid:
         text_next_height = 10 + farm_height + name_height + 20
         draw.text((10, text_next_height), balance, font=balance_font, fill=(0, 0, 0))
 

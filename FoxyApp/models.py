@@ -18,7 +18,7 @@ class User(db.Model, UserMixin):
     phone = db.Column(db.String(20), nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False)
     password = db.Column(db.String(60), nullable=False)
-    prepaid = db.Column(db.String(1), nullable=False, default='0')
+    prepaid = db.Column(db.Boolean, nullable=False, default=False)
     archive = db.Column(db.Boolean, nullable=False, default=False)
     orders = db.relationship('Order', backref='customer', lazy=True)
 

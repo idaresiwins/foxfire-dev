@@ -50,7 +50,7 @@ class AccountForm(FlaskForm):
     state = StringField("State", validators=[Length(min=2, max=20), no_http_characters])
     zipcode = StringField("Zip Code", validators=[Length(min=5, max=10), no_http_characters])
     phone = StringField("Phone Number", validators=[Length(min=7, max=20), no_http_characters])
-    dlt = BooleanField("Archive account?")
+    archive = BooleanField("Archive account?")
     submit = SubmitField("Update")
 
     def validate_email(self, email):
@@ -69,7 +69,7 @@ class EditAccountForm(FlaskForm):
     state = StringField("State", validators=[Length(min=2, max=20), no_http_characters])
     zipcode = StringField("Zip Code", validators=[Length(min=5, max=10), no_http_characters])
     phone = StringField("Phone Number", validators=[Length(min=7, max=20), no_http_characters])
-    dlt = BooleanField("Archive account?")
+    archive = BooleanField("Archive account?")
     prepaid = BooleanField("Prepaid")
     submit = SubmitField("Update")
 

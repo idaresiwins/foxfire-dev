@@ -19,7 +19,7 @@
             <tbody>
             {% for user in all_users %}
                 <tr id="user-{{ user.id }}">
-                    <td><a href="{{ url_for('edit_account', user_id=user.id) }}">{{user.name}}</a></td>
+                    <td><a href="{{ url_for('edit_account', user_id=user.id) }}" style="color: {% if user.archive %}red{% else %}inherit{% endif %};">{{user.name}}</a></td>
                     <td>{{user.address}}, {{user.city}}, {{user.state}}, {{user.zipcode}}</td>
                     <td>{{user.email}}</td>
                     <td>{{user.phone}}</td>
