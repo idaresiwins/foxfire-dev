@@ -103,7 +103,7 @@ class Picture(db.Model):
 
 class Toggle(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(20))
+    name = db.Column(db.Boolean)
     set_toggle = db.Column(db.Integer)
 
     def __repr__(self):

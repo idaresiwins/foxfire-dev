@@ -354,7 +354,7 @@ def manage_products():
             toggle.set_toggle = form.set_toggle.data
             db.session.commit()
             return render_template(url_for("manage_products"), item_matrix=prods, form=form, toggle = toggle)
-
+        form.set_toggle.data = toggle.set_toggle
         return render_template(url_for("manage_products"), item_matrix=prods, form=form, toggle = toggle)
 
 
@@ -567,7 +567,7 @@ def ordering(user_id):
     if user.prepaid:
         user.name = user.name + "(P)"
     toggle = Toggle.query.filter_by(id=1).first()
-
+    print(toggle.set_toggle)
     try:
         if request.method == "POST":
             logger.warning(f"{app.root_path}: Processing order for user: {user.name}")

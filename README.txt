@@ -24,3 +24,12 @@ SET prepaid_bool = CASE
 END;
 ALTER TABLE user DROP COLUMN prepaid;
 ALTER TABLE user RENAME COLUMN prepaid_bool TO prepaid;
+
+ALTER TABLE toggle ADD COLUMN set_toggle_bool boolean DEFAULT TRUE;
+UPDATE toggle
+SET set_toggle_bool = CASE
+    WHEN LOWER(set_toggle) IN ('true', 'yes', '1') THEN TRUE
+    ELSE FALSE
+END;
+ALTER TABLE toggle DROP COLUMN set_toggle;
+ALTER TABLE toggle RENAME COLUMN set_toggle_bool TO set_toggle;
