@@ -700,6 +700,8 @@ def ordering(user_id):
                 flash(f"Thanks for shopping with us. Your total will be ${total}.", "info")
                 return redirect(url_for("home"))
         elif current_user.email in admins:
+            if not toggle.set_toggle:
+                flash("Ordering is turned off", "success")
             return render_template("ordering.html", item_matrix=prods, location=location, admins=admins, user=user)
         elif toggle.set_toggle:
             return render_template("ordering.html", item_matrix=prods, location=location, admins=admins, user=user)
