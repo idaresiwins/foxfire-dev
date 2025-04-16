@@ -34,8 +34,10 @@
     <!-- Order statistics -->
     <div class="mb-3">
         <h3>Statistics</h3>
+        <p>
+            <span style="cursor: pointer; color: blue;" onclick="toggleChart()">Total Income:</span> ${{ stats.total_income }}
+        </p>
         <p>Number of Orders: {{ stats.num_orders }}</p>
-        <p>Total Income: ${{ stats.total_income }}</p>
         <p>Total Large Boxes: {{ stats.total_large_boxes }}</p>
         <p>Total Small Boxes: {{ stats.total_small_boxes }}</p>
         <p>Home Deliveries: {{ stats.home_deliveries }}</p>
@@ -47,6 +49,10 @@
                 <li>{{ item }}: {{ count }}</li>
                 {% endfor %}
             </ul>
+        </div>
+        <!-- Chart container (hidden by default) -->
+        <div id="income-chart-container" style="display: none; max-width: 600px; margin-top: 20px;">
+            <canvas id="incomeChart"></canvas>
         </div>
         <!-- Print Buttons -->
         <button onclick="printItemCounts()" class="btn btn-secondary">Print Item Count</button>
@@ -101,10 +107,9 @@
     </div>
 </div>
 
-
 <style>
 @media print {
-    .navbar, .btn, form, .mb-4 {
+    .navbar, .btn, form, .mb-4, #income-chart-container {
         display: none !important;
     }
     table {
@@ -118,7 +123,67 @@
 }
 </style>
 
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
+let chartInstance = null;
+
+function toggleChart() {
+    const chartContainer = document.getElementById('income-chart-container');
+    if (chartContainer.style.display === 'none') {
+        chartContainer.style.display = 'block';
+        if (!chartInstance) {
+            fetchIncomeData();
+        }
+    } else {
+        chartContainer.style.display = 'none';
+    }
+}
+
+function fetchIncomeData() {
+    fetch('{{ url_for("income_by_week") }}')
+        .then(response => response.json())
+        .then(data => {
+            const ctx = document.getElementById('incomeChart').getContext('2d');
+            chartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: data.labels,
+                    datasets: [{
+                        label: 'Total Income ($)',
+                        data: data.values,
+                        backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                        borderColor: 'rgba(54, 162, 235, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Income ($)'
+                            }
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Week Ending (Friday)'
+                            }
+                        }
+                    },
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Total Income by Week (Ending Friday)'
+                        }
+                    }
+                }
+            });
+        })
+        .catch(error => console.error('Error fetching income data:', error));
+}
+
 function printItemCounts() {
     const content = document.getElementById("item-count-section").innerHTML;
     const printWindow = window.open('', '', 'height=600,width=800');
@@ -133,6 +198,7 @@ function printItemCounts() {
     printWindow.print();
     printWindow.close();
 }
+
 function printImage(imageSrc) {
     const win = window.open('', '', 'width=800,height=600');
     win.document.write('<html><head><title>Print Label</title></head><body>');

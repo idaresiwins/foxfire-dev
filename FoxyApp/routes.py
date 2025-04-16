@@ -162,19 +162,26 @@ def income_by_week():
     if current_user.email not in admins:
         return redirect(url_for('home'))
 
-    today = datetime.utcnow()
-    current_monday = today - timedelta(days=today.weekday())
+    # Get the most recent Friday
+    this_friday_str = get_this_friday()
+    current_friday = datetime.strptime(this_friday_str, "%d-%b-%Y")
+
     data = []
-
     for i in range(12):
-        week_start = current_monday - timedelta(weeks=i)
-        week_end = week_start + timedelta(days=6, hours=23, minutes=59, seconds=59)
+        # Calculate the Friday for the week
+        friday = current_friday - timedelta(weeks=i)
+        # Week starts on Saturday before the Friday
+        week_start = datetime.combine(friday - timedelta(days=6), time.min)
+        # Week ends on Friday at 23:59:59
+        week_end = datetime.combine(friday, time.max)
 
+        # Sum total cost for orders in this week
         total = db.session.query(func.sum(Order.total_cost)).filter(
             Order.order_date.between(week_start, week_end)
         ).scalar() or 0
 
-        label = f"{week_start.strftime('%d %b')} - {week_end.strftime('%d %b')}"
+        # Label is the Friday date
+        label = friday.strftime('%d %b %Y')
         data.append((label, round(total, 2)))
 
     # Reverse to show oldest first
@@ -701,7 +708,7 @@ def ordering(user_id):
                 return redirect(url_for("home"))
         elif current_user.email in admins:
             if not toggle.set_toggle:
-                flash("Ordering is turned off", "success")
+                flash("Ordering is turned off. Only Admins can see this right now.", "success")
             return render_template("ordering.html", item_matrix=prods, location=location, admins=admins, user=user)
         elif toggle.set_toggle:
             return render_template("ordering.html", item_matrix=prods, location=location, admins=admins, user=user)
