@@ -224,13 +224,15 @@ def driver_form_week():
         flash("Invalid week date format.", "danger")
         return redirect(url_for("admin_orders"))
 
-    # Query orders for the week
+    # Get valid pickup locations
+    valid_locations = [loc.short_name for loc in Location.query.all()]
+    # Query orders for the week, only including home deliveries
     orders_query = db.session.query(Order, User).join(User, Order.user_id == User.id).filter(
-        Order.order_date.between(week_start, week_end)
+        Order.order_date.between(week_start, week_end),
+        ~Order.pickup_location.in_(valid_locations)
     ).all()
-
     if not orders_query:
-        flash("No orders found for the selected week.", "warning")
+        flash("No home delivery orders found for the selected week.", "warning")
         return redirect(url_for("admin_orders"))
 
     # Format the orders into the structure expected by driver_sheet
